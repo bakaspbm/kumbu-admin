@@ -25,6 +25,7 @@ export default async function ProductsPage({
       let req = supabase
         .from("catalog_products")
         .select("*")
+        .is("deleted_at", null)
         .order("sort_order")
         .order("title");
       if (categoryFilter) req = req.eq("category_id", categoryFilter);

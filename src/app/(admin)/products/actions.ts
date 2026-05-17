@@ -104,9 +104,15 @@ export async function deleteProductAction(
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("catalog_products")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) return { ok: false, message: error.message };
+  if (error) {
+    const { error: delErr } = await supabase
+      .from("catalog_products")
+      .delete()
+      .eq("id", id);
+    if (delErr) return { ok: false, message: delErr.message };
+  }
   await logAudit({
     action: "product.delete",
     entity: "catalog_products",

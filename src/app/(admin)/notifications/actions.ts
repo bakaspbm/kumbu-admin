@@ -31,15 +31,35 @@ export async function sendNotificationAction(
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Inválido" };
   }
   const supabase = await createSupabaseServerClient();
+  const broadcastId = crypto.randomUUID();
 
   let targets: string[] = [];
   if (parsed.data.audience === "single") {
     if (!parsed.data.user_id) {
-      return { ok: false, message: "Indica o UID do utilizador." };
+      return { ok: false, message: "Indica o utilizador (e-mail ou UID)." };
     }
-    targets = [parsed.data.user_id];
+    const uid = parsed.data.user_id.trim();
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid);
+    if (isUuid) {
+      targets = [uid];
+    } else {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("id")
+        .ilike("email", uid)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error || !user) {
+        return { ok: false, message: "Utilizador não encontrado." };
+      }
+      targets = [user.id];
+    }
   } else {
-    const { data: ids, error: e } = await supabase.from("users").select("id");
+    const { data: ids, error: e } = await supabase
+      .from("users")
+      .select("id")
+      .is("deleted_at", null);
     if (e) return { ok: false, message: e.message };
     targets = (ids ?? []).map((r) => r.id as string);
   }
@@ -53,9 +73,9 @@ export async function sendNotificationAction(
     title: parsed.data.title,
     body: parsed.data.body,
     icon_key: parsed.data.icon_key,
+    broadcast_id: broadcastId,
   }));
 
-  // Inserir em lotes para evitar payloads enormes.
   const BATCH = 500;
   for (let i = 0; i < rows.length; i += BATCH) {
     const chunk = rows.slice(i, i + BATCH);
@@ -70,6 +90,7 @@ export async function sendNotificationAction(
       audience: parsed.data.audience,
       count: rows.length,
       title: parsed.data.title,
+      broadcast_id: broadcastId,
     },
   });
 
@@ -80,36 +101,61 @@ export async function sendNotificationAction(
   };
 }
 
-export async function markAsReadAction(
-  _prev: ActionState,
-  formData: FormData
-): Promise<ActionState> {
+export async function markAsReadAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false, message: "ID em falta." };
+  if (!id) return;
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  await supabase
     .from("user_notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) return { ok: false, message: error.message };
   revalidatePath("/notifications");
-  return { ok: true };
 }
 
-export async function deleteNotificationAction(
-  _prev: ActionState,
-  formData: FormData
-): Promise<ActionState> {
+export async function hideNotificationAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false, message: "ID em falta." };
+  if (!id) return;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("user_notifications")
-    .delete()
+    .update({ hidden_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) return { ok: false, message: error.message };
+  if (!error) {
+    await logAudit({
+      action: "notification.hide",
+      entity: "user_notifications",
+      entityId: id,
+    });
+  }
   revalidatePath("/notifications");
-  return { ok: true };
+}
+
+export async function unhideNotificationAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from("user_notifications")
+    .update({ hidden_at: null })
+    .eq("id", id);
+  revalidatePath("/notifications");
+}
+
+export async function deleteNotificationAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("user_notifications").delete().eq("id", id);
+  if (!error) {
+    await logAudit({
+      action: "notification.delete",
+      entity: "user_notifications",
+      entityId: id,
+    });
+  }
+  revalidatePath("/notifications");
 }

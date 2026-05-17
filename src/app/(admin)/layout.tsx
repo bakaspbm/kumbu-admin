@@ -1,7 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { Sidebar } from "@/components/shell/sidebar";
-import { Topbar } from "@/components/shell/topbar";
-import { MobileNav } from "@/components/shell/mobile-nav";
+import { AdminLayoutClient } from "@/components/shell/admin-layout-client";
 
 export default async function AdminLayout({
   children,
@@ -11,15 +9,6 @@ export default async function AdminLayout({
   const session = await requireAdmin();
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex flex-1 min-w-0 flex-col">
-        <Topbar session={session} />
-        <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-10">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
-        </main>
-        <MobileNav />
-      </div>
-    </div>
+    <AdminLayoutClient session={session}>{children}</AdminLayoutClient>
   );
 }

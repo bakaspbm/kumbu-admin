@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, LogIn } from "lucide-react";
 import { loginAction, type LoginState } from "./actions";
+import { useAuthRedirect } from "./use-auth-redirect";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -24,6 +25,7 @@ export function LoginForm({ next }: { next: string }) {
     loginAction,
     undefined
   );
+  useAuthRedirect(state);
 
   return (
     <form action={action} className="space-y-4">

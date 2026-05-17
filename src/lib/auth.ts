@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getAdminRecord } from "@/lib/admin-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AdminRole = "super_admin" | "admin" | "support";
@@ -13,6 +14,12 @@ export interface AdminSession {
  * Garante que existe sessão e que o utilizador é admin. Caso contrário
  * redireciona para /login (ou /forbidden quando autenticado mas sem permissão).
  */
+export async function requireSuperAdmin(): Promise<AdminSession> {
+  const session = await requireAdmin();
+  if (session.role !== "super_admin") redirect("/dashboard");
+  return session;
+}
+
 export async function requireAdmin(): Promise<AdminSession> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -21,18 +28,13 @@ export async function requireAdmin(): Promise<AdminSession> {
 
   if (!user) redirect("/login");
 
-  const { data: admin, error } = await supabase
-    .from("admin_users")
-    .select("user_id, email, role")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error || !admin) redirect("/forbidden");
+  const admin = await getAdminRecord(supabase, user.id);
+  if (!admin) redirect("/forbidden");
 
   return {
     userId: admin.user_id,
     email: admin.email,
-    role: admin.role as AdminRole,
+    role: admin.role,
   };
 }
 
@@ -43,16 +45,12 @@ export async function getOptionalAdmin(): Promise<AdminSession | null> {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data: admin } = await supabase
-      .from("admin_users")
-      .select("user_id, email, role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const admin = await getAdminRecord(supabase, user.id);
     if (!admin) return null;
     return {
       userId: admin.user_id,
       email: admin.email,
-      role: admin.role as AdminRole,
+      role: admin.role,
     };
   } catch {
     return null;

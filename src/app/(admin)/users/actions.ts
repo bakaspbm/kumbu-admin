@@ -74,6 +74,18 @@ export async function deleteUserAction(
   }
 
   const admin = createSupabaseServiceClient();
+  const { data: profile } = await admin
+    .from("users")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+
+  await admin.from("user_deletion_events").insert({
+    user_id: id,
+    email: profile?.email ?? null,
+    source: "admin",
+  });
+
   const { error: authErr } = await admin.auth.admin.deleteUser(id);
   if (authErr) return { ok: false, message: authErr.message };
 

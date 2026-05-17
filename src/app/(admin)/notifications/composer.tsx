@@ -20,7 +20,11 @@ function Submit() {
   );
 }
 
-export function NotificationComposer() {
+export function NotificationComposer({
+  userOptions,
+}: {
+  userOptions: { id: string; email: string; name: string }[];
+}) {
   const [state, action] = useActionState<ActionState, FormData>(
     sendNotificationAction,
     null
@@ -32,7 +36,7 @@ export function NotificationComposer() {
       <p className="text-sm font-semibold">Compor notificação</p>
       <FeedbackBanner feedback={state} />
       <form action={action} className="space-y-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="inline-flex items-center gap-2">
             <input
               type="radio"
@@ -53,19 +57,29 @@ export function NotificationComposer() {
               onChange={() => setAudience("single")}
               className="h-4 w-4 border-slate-300 text-kumbu-red"
             />
-            <span className="text-sm">Utilizador específico</span>
+            <span className="text-sm">Um utilizador</span>
           </label>
         </div>
 
         {audience === "single" && (
           <label className="block space-y-1.5">
-            <span className="kumbu-label">UID do utilizador</span>
+            <span className="kumbu-label">E-mail ou UID</span>
             <input
               name="user_id"
+              list="kumbu-user-list"
               required={audience === "single"}
-              placeholder="00000000-0000-0000-0000-000000000000"
-              className="kumbu-input font-mono"
+              placeholder="utilizador@email.com"
+              className="kumbu-input"
             />
+            <datalist id="kumbu-user-list">
+              {userOptions.map((u) => (
+                <option
+                  key={u.id}
+                  value={u.email || u.id}
+                  label={u.name || u.email || u.id}
+                />
+              ))}
+            </datalist>
           </label>
         )}
 

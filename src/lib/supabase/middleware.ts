@@ -47,10 +47,23 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
+    const { data: adminRows } = await supabase.rpc("admin_me");
+    const isAdmin =
+      adminRows?.[0]?.user_id === user.id ||
+      (
+        await supabase
+          .from("admin_users")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      ).data?.user_id === user.id;
+
+    if (isAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

@@ -6,6 +6,12 @@ export interface KumbuUser {
   photo_url: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
+  gender?: string | null;
+  birth_date?: string | null;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
   cart: unknown;
   favorites: unknown;
   delivery_address: Record<string, unknown> | null;
@@ -53,6 +59,8 @@ export interface CatalogProduct {
   is_featured: boolean;
   is_out_of_stock: boolean;
   sort_order: number;
+  created_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface MarketingBlock {
@@ -95,6 +103,8 @@ export interface UserNotification {
   icon_key: string;
   created_at: string;
   read_at: string | null;
+  hidden_at?: string | null;
+  broadcast_id?: string | null;
 }
 
 export interface AdminOverview {

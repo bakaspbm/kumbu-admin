@@ -2,10 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { logAudit, requireAdmin } from "@/lib/auth";
-import {
-  createSupabaseServerClient,
-  createSupabaseServiceClient,
-} from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createAdminAccount } from "@/lib/admin-setup";
 import { hasServiceRole } from "@/lib/env";
 
 export type ActionState = { ok?: boolean; message?: string } | null;
@@ -94,29 +92,20 @@ export async function inviteAdminAction(
   if (!["super_admin", "admin", "support"].includes(role)) {
     return { ok: false, message: "Função inválida." };
   }
-  const admin = createSupabaseServiceClient();
-  const { data, error } = await admin.auth.admin.createUser({
+  const created = await createAdminAccount({
     email,
     password,
-    email_confirm: true,
+    role: role as "super_admin" | "admin" | "support",
+    createdBy: session.userId,
   });
-  if (error || !data.user) {
-    return { ok: false, message: error?.message ?? "Falha ao criar utilizador." };
+  if ("error" in created) {
+    return { ok: false, message: created.error };
   }
-
-  const supabase = await createSupabaseServerClient();
-  const { error: insErr } = await supabase.from("admin_users").insert({
-    user_id: data.user.id,
-    email,
-    role,
-    created_by: session.userId,
-  });
-  if (insErr) return { ok: false, message: insErr.message };
 
   await logAudit({
     action: "admin.invite",
     entity: "admin_users",
-    entityId: data.user.id,
+    entityId: created.userId,
     payload: { email, role },
   });
   revalidatePath("/admins");

@@ -23,7 +23,7 @@ alter table public.admin_users enable row level security;
 drop policy if exists admin_users_select on public.admin_users;
 create policy admin_users_select on public.admin_users
   for select to authenticated
-  using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+  using (user_id = auth.uid() or public.is_admin());
 
 drop policy if exists admin_users_insert on public.admin_users;
 create policy admin_users_insert on public.admin_users
