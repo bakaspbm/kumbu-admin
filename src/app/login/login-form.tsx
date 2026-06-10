@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, LogIn } from "lucide-react";
-import { loginAction, type LoginState } from "./actions";
+import type { LoginState } from "@/lib/action-state";
+import { loginAction } from "./actions";
 import { useAuthRedirect } from "./use-auth-redirect";
 
 function SubmitButton() {

@@ -29,7 +29,7 @@ export function SupportForm({ settings }: { settings: SupportSettings | null }) 
 
   return (
     <form action={action} className="space-y-4">
-      <input type="hidden" name="id" value={settings?.id ?? "global"} />
+      <input type="hidden" name="id" value={settings?.id ?? "default"} />
       <FeedbackBanner feedback={state} />
       <label className="block space-y-1.5">
         <span className="kumbu-label">Mensagem de boas-vindas</span>

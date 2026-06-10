@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
-import { getAdminRecord } from "@/lib/admin-access";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { adminMe } from "@/lib/kumbu-api/admin";
+import {
+  KumbuApiError,
+  getKumbuAccessToken,
+  kumbuApiFetch,
+} from "@/lib/kumbu-api/server-client";
 
 export type AdminRole = "super_admin" | "admin" | "support";
 
@@ -10,10 +14,6 @@ export interface AdminSession {
   role: AdminRole;
 }
 
-/**
- * Garante que existe sessão e que o utilizador é admin. Caso contrário
- * redireciona para /login (ou /forbidden quando autenticado mas sem permissão).
- */
 export async function requireSuperAdmin(): Promise<AdminSession> {
   const session = await requireAdmin();
   if (session.role !== "super_admin") redirect("/dashboard");
@@ -21,40 +21,61 @@ export async function requireSuperAdmin(): Promise<AdminSession> {
 }
 
 export async function requireAdmin(): Promise<AdminSession> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const token = await getKumbuAccessToken();
+  if (!token) redirect("/login");
 
-  if (!user) redirect("/login");
-
-  const admin = await getAdminRecord(supabase, user.id);
-  if (!admin) redirect("/forbidden");
-
-  return {
-    userId: admin.user_id,
-    email: admin.email,
-    role: admin.role,
-  };
+  try {
+    const me = await adminMe();
+    return {
+      userId: me.userId,
+      email: me.email,
+      role: (me.role as AdminRole | undefined) ?? "admin",
+    };
+  } catch (error) {
+    if (error instanceof KumbuApiError) {
+      if (error.status === 401) redirect("/login");
+      if (error.status === 403) redirect("/forbidden");
+    }
+    redirect("/login");
+  }
 }
 
 export async function getOptionalAdmin(): Promise<AdminSession | null> {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
-    const admin = await getAdminRecord(supabase, user.id);
-    if (!admin) return null;
+    const token = await getKumbuAccessToken();
+    if (!token) return null;
+    const me = await adminMe();
     return {
-      userId: admin.user_id,
-      email: admin.email,
-      role: admin.role,
+      userId: me.userId,
+      email: me.email,
+      role: (me.role as AdminRole | undefined) ?? "admin",
     };
   } catch {
     return null;
   }
+}
+
+export async function resolveAdminAction(): Promise<
+  { session: AdminSession } | { error: string }
+> {
+  const session = await getOptionalAdmin();
+  if (!session) {
+    return {
+      error: "Sessão expirada ou sem permissão. Entra novamente no painel.",
+    };
+  }
+  return { session };
+}
+
+export async function resolveSuperAdminAction(): Promise<
+  { session: AdminSession } | { error: string }
+> {
+  const auth = await resolveAdminAction();
+  if ("error" in auth) return auth;
+  if (auth.session.role !== "super_admin") {
+    return { error: "Apenas super admins podem executar esta acção." };
+  }
+  return auth;
 }
 
 export async function logAudit(input: {
@@ -64,19 +85,20 @@ export async function logAudit(input: {
   payload?: Record<string, unknown>;
 }) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("admin_audit_log").insert({
-      actor_id: user.id,
-      actor_email: user.email ?? null,
-      action: input.action,
-      entity: input.entity ?? null,
-      entity_id: input.entityId ?? null,
-      payload: input.payload ?? {},
-    });
+    await kumbuApiFetch<void>(
+      "/admin/system/audit-log",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: input.action,
+          entity: input.entity ?? null,
+          entity_id: input.entityId ?? null,
+          payload: input.payload ?? {},
+        }),
+      },
+      { withAuth: true },
+    );
   } catch {
     // não bloqueia o fluxo principal por causa de auditoria
   }

@@ -1,8 +1,5 @@
 import { ShieldCheck } from "lucide-react";
-import { getBootstrapStatus } from "@/lib/admin-setup";
-import { env } from "@/lib/env";
 import { AuthPanel } from "./auth-panel";
-
 export const metadata = { title: "Entrar — Kumbu Admin" };
 
 export default async function LoginPage({
@@ -12,10 +9,8 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const next = params?.next ?? "/dashboard";
-  const bootstrap = await getBootstrapStatus();
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-kumbu-gradient">
+  return (    <main className="relative min-h-screen overflow-hidden bg-kumbu-gradient">
       <div className="absolute inset-0 -z-0 opacity-30 [background:radial-gradient(800px_circle_at_20%_20%,white,transparent_60%)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-10">
         <div className="grid w-full grid-cols-1 overflow-hidden rounded-2xl shadow-pop md:grid-cols-2 bg-white">
@@ -48,11 +43,7 @@ export default async function LoginPage({
                 Apenas contas marcadas como administradoras conseguem entrar.
               </p>
             </div>
-            <AuthPanel
-              next={next}
-              bootstrap={bootstrap}
-              defaultEmail={env.superAdminEmail}
-            />
+            <AuthPanel next={next} />
           </div>
         </div>
       </div>

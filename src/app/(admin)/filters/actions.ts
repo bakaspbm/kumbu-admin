@@ -1,65 +1,116 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+
 import { logAudit, requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type ActionState = { ok?: boolean; message?: string } | null;
+import { adminDelete, adminUpsert } from "@/lib/admin-data";
 
-const schema = z.object({
-  id: z.string().min(1).max(40),
-  label: z.string().min(1).max(60),
-  sort_mode: z.enum(["default", "rating_desc", "price_asc"]),
-  sort_order: z.coerce.number().int().default(0),
-});
+import type { ActionState } from "@/lib/action-state";
+
+import { formDataNumber, formDataString, toActionState } from "@/lib/kumbu-api/errors";
+
+
+
+export type { ActionState };
+
+
 
 export async function upsertFilterAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = schema.safeParse({
-    id: formData.get("id") ?? "",
-    label: formData.get("label") ?? "",
-    sort_mode: formData.get("sort_mode") ?? "default",
-    sort_order: formData.get("sort_order") ?? 0,
-  });
-  if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Inválido" };
+
+  try {
+
+    await requireAdmin();
+
+    const payload = {
+
+      id: formDataString(formData, "id"),
+
+      label: formDataString(formData, "label"),
+
+      sort_mode: formDataString(formData, "sort_mode") || "default",
+
+      sort_order: formDataNumber(formData, "sort_order"),
+
+    };
+
+    if (!payload.id) return { ok: false, message: "ID em falta." };
+
+
+
+    await adminUpsert("filters", payload as Record<string, unknown>);
+
+    await logAudit({
+
+      action: "filter.upsert",
+
+      entity: "app_category_sort_filters",
+
+      entityId: payload.id,
+
+    });
+
+    revalidatePath("/filters");
+
+    return { ok: true, message: "Filtro guardado." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("app_category_sort_filters")
-    .upsert(parsed.data);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "filter.upsert",
-    entity: "app_category_sort_filters",
-    entityId: parsed.data.id,
-  });
-  revalidatePath("/filters");
-  return { ok: true, message: "Filtro guardado." };
+
 }
 
+
+
 export async function deleteFilterAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false, message: "ID em falta." };
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("app_category_sort_filters")
-    .delete()
-    .eq("id", id);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "filter.delete",
-    entity: "app_category_sort_filters",
-    entityId: id,
-  });
-  revalidatePath("/filters");
-  return { ok: true, message: "Eliminado." };
+
+  try {
+
+    await requireAdmin();
+
+    const id = formDataString(formData, "id");
+
+    if (!id) return { ok: false, message: "ID em falta." };
+
+
+
+    await adminDelete("filters", id);
+
+    await logAudit({
+
+      action: "filter.delete",
+
+      entity: "app_category_sort_filters",
+
+      entityId: id,
+
+    });
+
+    revalidatePath("/filters");
+
+    return { ok: true, message: "Eliminado." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
+  }
+
 }
+

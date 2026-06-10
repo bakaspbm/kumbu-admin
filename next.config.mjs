@@ -6,16 +6,7 @@ const nextConfig = {
   // Saltar a etapa interna do Next acelera muito o build.
   typescript: { ignoreBuildErrors: true },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.in",
-      },
-    ],
+    remotePatterns: [],
   },
   experimental: {
     serverActions: {

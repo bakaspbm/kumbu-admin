@@ -1,3 +1,14 @@
+export type ClientSource = "app" | "web" | "unknown";
+
+export type SignupAuthMethod =
+  | "email"
+  | "google"
+  | "facebook"
+  | "phone"
+  | "apple"
+  | "anonymous"
+  | "unknown";
+
 export interface KumbuUser {
   id: string;
   email: string | null;
@@ -6,6 +17,13 @@ export interface KumbuUser {
   photo_url: string | null;
   created_at: string;
   updated_at: string;
+  signup_source?: ClientSource | string | null;
+  signup_auth_method?: SignupAuthMethod | string | null;
+  last_active_source?: ClientSource | string | null;
+  banned_at?: string | null;
+  banned_until?: string | null;
+  ban_reason?: string | null;
+  banned_by?: string | null;
   deleted_at?: string | null;
   gender?: string | null;
   birth_date?: string | null;
@@ -22,6 +40,7 @@ export type OrderStatus = "delivered" | "shipping" | "processing" | "cancelled";
 export interface KumbuOrder {
   id: string;
   user_id: string;
+  seller_id?: string | null;
   created_at: string;
   items_count: number;
   total_label: string;
@@ -50,7 +69,7 @@ export interface CatalogProduct {
   category_id: string;
   subcategory_id: string | null;
   title: string;
-  rating: number;
+  rating?: number | null;
   price_label: string;
   old_price_label: string | null;
   discount_percent: number | null;
@@ -59,6 +78,7 @@ export interface CatalogProduct {
   is_featured: boolean;
   is_out_of_stock: boolean;
   sort_order: number;
+  seller_id?: string | null;
   created_at?: string;
   deleted_at?: string | null;
 }
@@ -127,4 +147,74 @@ export interface AdminUserRow {
   email: string;
   role: "super_admin" | "admin" | "support";
   created_at: string;
+}
+
+export interface MarketplaceConversation {
+  id: string;
+  product_id: string | null;
+  buyer_id: string;
+  seller_id: string;
+  created_at: string;
+  updated_at: string;
+  is_blocked: boolean;
+  blocked_reason: string | null;
+  blocked_at: string | null;
+  messages?: ChatMessage[];
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  hidden_at: string | null;
+}
+
+export type ContentReportStatus = "pending" | "reviewing" | "resolved" | "dismissed";
+
+export type ContentReportTargetType = "listing" | "user" | "conversation" | "message";
+
+export interface ContentReport {
+  id: string;
+  reporter_id: string;
+  target_type: ContentReportTargetType;
+  target_id: string;
+  reported_user_id: string | null;
+  reason: string;
+  details: string | null;
+  status: ContentReportStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  admin_notes: string | null;
+}
+
+export interface UserConsent {
+  id: string;
+  user_id: string;
+  consent_type: string;
+  accepted_at: string;
+  user_agent: string | null;
+}
+
+export interface UserBlock {
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+}
+
+export interface LegalSection {
+  title: string;
+  paragraphs: string[];
+}
+
+export interface LegalDocument {
+  slug: string;
+  title: string;
+  intro: string | null;
+  sections: LegalSection[];
+  updated_at: string;
+  updated_by: string | null;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import { useFormStatus } from "react-dom";
 import { Loader2, Save } from "lucide-react";
 import {
@@ -40,6 +41,7 @@ export function ProductForm({
     mode === "create" ? createProductAction : updateProductAction,
     null
   );
+  useRouterRefreshOnActions(state);
 
   return (
     <form action={action} className="space-y-4">

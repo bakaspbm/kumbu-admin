@@ -1,156 +1,260 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
+
 import { redirect } from "next/navigation";
-import { z } from "zod";
+
 import { logAudit, requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type ActionState = { ok?: boolean; message?: string } | null;
+import { adminDelete, adminPatch } from "@/lib/admin-data";
 
-const baseSchema = z.object({
-  id: z
-    .string()
-    .min(1)
-    .max(80)
-    .regex(/^[a-z0-9_-]+$/i, "Use apenas letras, números, hífen ou underscore"),
-  category_id: z.string().min(1),
-  subcategory_id: z.string().optional().nullable(),
-  title: z.string().min(1).max(200),
-  rating: z.coerce.number().min(0).max(5),
-  price_label: z.string().min(1).max(60),
-  old_price_label: z.string().max(60).optional().nullable(),
-  discount_percent: z.coerce.number().int().min(0).max(99).optional().nullable(),
-  delivery_text: z.string().max(120).optional().nullable(),
-  image_color: z.coerce.number().int().min(0).max(0xffffffff).optional().nullable(),
-  is_featured: z.coerce.boolean().default(false),
-  is_out_of_stock: z.coerce.boolean().default(false),
-  sort_order: z.coerce.number().int().default(0),
-});
+import type { ActionState } from "@/lib/action-state";
 
-function parseProduct(formData: FormData) {
-  return baseSchema.safeParse({
-    id: formData.get("id") ?? "",
-    category_id: formData.get("category_id") ?? "",
-    subcategory_id: formData.get("subcategory_id") || null,
-    title: formData.get("title") ?? "",
-    rating: formData.get("rating") ?? 4.5,
-    price_label: formData.get("price_label") ?? "",
-    old_price_label: formData.get("old_price_label") || null,
-    discount_percent: formData.get("discount_percent") || null,
-    delivery_text: formData.get("delivery_text") || null,
-    image_color: formData.get("image_color") || null,
+import { formDataNumber, formDataString, toActionState } from "@/lib/kumbu-api/errors";
+
+import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
+
+
+
+export type { ActionState };
+
+
+
+function buildProductPayload(formData: FormData) {
+
+  const subcategory = formDataString(formData, "subcategory_id");
+
+  const oldPrice = formDataString(formData, "old_price_label");
+
+  const discount = formData.get("discount_percent");
+
+  const delivery = formDataString(formData, "delivery_text");
+
+  const imageColor = formData.get("image_color");
+
+  return {
+
+    id: formDataString(formData, "id"),
+
+    category_id: formDataString(formData, "category_id"),
+
+    subcategory_id: subcategory || null,
+
+    title: formDataString(formData, "title"),
+
+    rating: formDataNumber(formData, "rating", 4.5),
+
+    price_label: formDataString(formData, "price_label"),
+
+    old_price_label: oldPrice || null,
+
+    discount_percent:
+
+      discount == null || discount === "" ? null : formDataNumber(formData, "discount_percent"),
+
+    delivery_text: delivery || null,
+
+    image_color:
+
+      imageColor == null || imageColor === "" ? null : formDataNumber(formData, "image_color"),
+
     is_featured: formData.get("is_featured") === "on",
+
     is_out_of_stock: formData.get("is_out_of_stock") === "on",
-    sort_order: formData.get("sort_order") ?? 0,
-  });
+
+    sort_order: formDataNumber(formData, "sort_order"),
+
+  };
+
 }
+
+
 
 export async function createProductAction(
+
   _prev: ActionState,
-  formData: FormData
+
+  _formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = parseProduct(formData);
-  if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Inválido" };
+
+  try {
+
+    await requireAdmin();
+
+    return {
+
+      ok: false,
+
+      message:
+
+        "Os produtos são criados pelos utilizadores na app. O admin apenas modera (editar, destaque, remover).",
+
+    };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("catalog_products").insert(parsed.data);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "product.create",
-    entity: "catalog_products",
-    entityId: parsed.data.id,
-    payload: { title: parsed.data.title },
-  });
-  revalidatePath("/products");
-  redirect("/products");
+
 }
+
+
 
 export async function updateProductAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = parseProduct(formData);
-  if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Inválido" };
+
+  try {
+
+    await requireAdmin();
+
+    const payload = buildProductPayload(formData);
+
+    if (!payload.id) return { ok: false, message: "ID em falta." };
+
+    const { id, ...rest } = payload;
+
+
+
+    await adminPatch("products", id, rest as Record<string, unknown>);
+
+    await logAudit({
+
+      action: "product.update",
+
+      entity: "catalog_products",
+
+      entityId: id,
+
+    });
+
+    revalidatePath("/products");
+
+    revalidatePath(`/products/${id}`);
+
+    return { ok: true, message: "Produto atualizado." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const supabase = await createSupabaseServerClient();
-  const { id, ...rest } = parsed.data;
-  const { error } = await supabase
-    .from("catalog_products")
-    .update(rest)
-    .eq("id", id);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "product.update",
-    entity: "catalog_products",
-    entityId: id,
-  });
-  revalidatePath("/products");
-  revalidatePath(`/products/${id}`);
-  return { ok: true, message: "Produto atualizado." };
+
 }
+
+
 
 export async function deleteProductAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false, message: "ID em falta." };
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("catalog_products")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) {
-    const { error: delErr } = await supabase
-      .from("catalog_products")
-      .delete()
-      .eq("id", id);
-    if (delErr) return { ok: false, message: delErr.message };
+
+  try {
+
+    await requireAdmin();
+
+    const id = formDataString(formData, "id");
+
+    if (!id) return { ok: false, message: "ID em falta." };
+
+
+
+    await adminDelete("products", id);
+
+    await logAudit({
+
+      action: "product.delete",
+
+      entity: "catalog_products",
+
+      entityId: id,
+
+    });
+
+    revalidatePath("/products");
+
+    redirect("/products");
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  await logAudit({
-    action: "product.delete",
-    entity: "catalog_products",
-    entityId: id,
-  });
-  revalidatePath("/products");
-  redirect("/products");
+
 }
 
+
+
 export async function toggleProductFlagAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const field = String(formData.get("field") ?? "");
-  if (!id || !["is_featured", "is_out_of_stock"].includes(field)) {
-    return { ok: false, message: "Inválido." };
+
+  try {
+
+    await requireAdmin();
+
+    const id = formDataString(formData, "id");
+
+    const field = formDataString(formData, "field");
+
+    if (!id || !["is_featured", "is_out_of_stock"].includes(field)) {
+
+      return { ok: false, message: "Inválido." };
+
+    }
+
+
+
+    const value = formData.get("value") === "true";
+    const actionPath =
+      field === "is_featured" ? "featured" : "out-of-stock";
+
+    await kumbuApiFetch<void>(
+      `/admin/products/${id}/${actionPath}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      },
+      { withAuth: true },
+    );
+
+    await logAudit({
+
+      action: "product.toggle",
+
+      entity: "catalog_products",
+
+      entityId: id,
+
+      payload: { field },
+
+    });
+
+    revalidatePath("/products");
+
+    return { ok: true };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const supabase = await createSupabaseServerClient();
-  const { data: existing, error: getErr } = await supabase
-    .from("catalog_products")
-    .select(field)
-    .eq("id", id)
-    .maybeSingle();
-  if (getErr || !existing) return { ok: false, message: "Não encontrado." };
-  const current = (existing as unknown as Record<string, boolean>)[field];
-  const { error } = await supabase
-    .from("catalog_products")
-    .update({ [field]: !current })
-    .eq("id", id);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "product.toggle",
-    entity: "catalog_products",
-    entityId: id,
-    payload: { field, value: !current },
-  });
-  revalidatePath("/products");
-  return { ok: true };
+
 }
+

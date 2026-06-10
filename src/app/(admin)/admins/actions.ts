@@ -1,113 +1,224 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { logAudit, requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createAdminAccount } from "@/lib/admin-setup";
-import { hasServiceRole } from "@/lib/env";
 
-export type ActionState = { ok?: boolean; message?: string } | null;
+
+import { revalidatePath } from "next/cache";
+
+import { logAudit, requireAdmin } from "@/lib/auth";
+
+import { adminDelete, adminList, adminPatch, adminUpsert } from "@/lib/admin-data";
+
+import type { ActionState } from "@/lib/action-state";
+
+import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
+
+
+
+export type { ActionState };
+
+
 
 export async function changeRoleAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  const session = await requireAdmin();
-  if (session.role !== "super_admin") {
-    return { ok: false, message: "Apenas super admins podem alterar funções." };
+
+  try {
+
+    const session = await requireAdmin();
+
+    if (session.role !== "super_admin") {
+
+      return { ok: false, message: "Apenas super admins podem alterar funções." };
+
+    }
+
+    const user_id = formDataString(formData, "user_id");
+
+    const role = formDataString(formData, "role");
+
+    if (!user_id || !["super_admin", "admin", "support"].includes(role)) {
+
+      return { ok: false, message: "Dados inválidos." };
+
+    }
+
+
+
+    await adminPatch("admins", user_id, { role });
+
+    await logAudit({
+
+      action: "admin.change_role",
+
+      entity: "admin_users",
+
+      entityId: user_id,
+
+      payload: { role },
+
+    });
+
+    revalidatePath("/admins");
+
+    return { ok: true, message: "Função atualizada." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const user_id = String(formData.get("user_id") ?? "");
-  const role = String(formData.get("role") ?? "");
-  if (!user_id || !["super_admin", "admin", "support"].includes(role)) {
-    return { ok: false, message: "Dados inválidos." };
-  }
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("admin_users")
-    .update({ role })
-    .eq("user_id", user_id);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "admin.change_role",
-    entity: "admin_users",
-    entityId: user_id,
-    payload: { role },
-  });
-  revalidatePath("/admins");
-  return { ok: true, message: "Função atualizada." };
+
 }
+
+
 
 export async function removeAdminAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  const session = await requireAdmin();
-  if (session.role !== "super_admin") {
-    return { ok: false, message: "Apenas super admins podem remover." };
+
+  try {
+
+    const session = await requireAdmin();
+
+    if (session.role !== "super_admin") {
+
+      return { ok: false, message: "Apenas super admins podem remover." };
+
+    }
+
+    const user_id = formDataString(formData, "user_id");
+
+    if (!user_id) return { ok: false, message: "ID em falta." };
+
+    if (user_id === session.userId) {
+
+      return { ok: false, message: "Não podes remover a tua própria conta." };
+
+    }
+
+
+
+    await adminDelete("admins", user_id, "user_id");
+
+    await logAudit({
+
+      action: "admin.remove",
+
+      entity: "admin_users",
+
+      entityId: user_id,
+
+    });
+
+    revalidatePath("/admins");
+
+    return { ok: true, message: "Removido." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
-  const user_id = String(formData.get("user_id") ?? "");
-  if (!user_id) return { ok: false, message: "ID em falta." };
-  if (user_id === session.userId) {
-    return { ok: false, message: "Não podes remover a tua própria conta." };
-  }
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("admin_users")
-    .delete()
-    .eq("user_id", user_id);
-  if (error) return { ok: false, message: error.message };
-  await logAudit({
-    action: "admin.remove",
-    entity: "admin_users",
-    entityId: user_id,
-  });
-  revalidatePath("/admins");
-  return { ok: true, message: "Removido." };
+
 }
 
-/**
- * Cria uma nova conta de admin (Auth + admin_users). Requer SERVICE ROLE.
- */
+
+
 export async function inviteAdminAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  const session = await requireAdmin();
-  if (session.role !== "super_admin") {
-    return { ok: false, message: "Apenas super admins podem convidar." };
-  }
-  if (!hasServiceRole()) {
-    return {
-      ok: false,
-      message:
-        "Configura SUPABASE_SERVICE_ROLE_KEY em .env.local para criar contas de admin.",
-    };
-  }
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  const role = String(formData.get("role") ?? "admin");
-  if (!email || !password) {
-    return { ok: false, message: "E-mail e palavra-passe são obrigatórios." };
-  }
-  if (!["super_admin", "admin", "support"].includes(role)) {
-    return { ok: false, message: "Função inválida." };
-  }
-  const created = await createAdminAccount({
-    email,
-    password,
-    role: role as "super_admin" | "admin" | "support",
-    createdBy: session.userId,
-  });
-  if ("error" in created) {
-    return { ok: false, message: created.error };
+
+  try {
+
+    const session = await requireAdmin();
+
+    if (session.role !== "super_admin") {
+
+      return { ok: false, message: "Apenas super admins podem convidar." };
+
+    }
+
+    const email = formDataString(formData, "email").toLowerCase();
+
+    const role = formDataString(formData, "role") || "admin";
+
+    if (!email) {
+
+      return { ok: false, message: "E-mail é obrigatório." };
+
+    }
+
+    if (!["super_admin", "admin", "support"].includes(role)) {
+
+      return { ok: false, message: "Função inválida." };
+
+    }
+
+
+
+    const matches = await adminList<{ id: string; email: string | null }>("users", {
+
+      q: email,
+
+    });
+
+    const user = matches.find((u) => u.email?.toLowerCase() === email);
+
+    if (!user) {
+
+      return {
+
+        ok: false,
+
+        message:
+
+          "Utilizador não encontrado. A conta deve existir na app antes de promover a admin.",
+
+      };
+
+    }
+
+
+
+    await adminUpsert("admins", {
+
+      user_id: user.id,
+
+      role,
+
+    });
+
+    await logAudit({
+
+      action: "admin.invite",
+
+      entity: "admin_users",
+
+      payload: { email, role },
+
+    });
+
+    revalidatePath("/admins");
+
+    return { ok: true, message: "Administrador promovido." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
   }
 
-  await logAudit({
-    action: "admin.invite",
-    entity: "admin_users",
-    entityId: created.userId,
-    payload: { email, role },
-  });
-  revalidatePath("/admins");
-  return { ok: true, message: "Administrador criado." };
 }
+

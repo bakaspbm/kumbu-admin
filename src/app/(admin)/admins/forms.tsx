@@ -37,22 +37,15 @@ export function InviteAdminForm() {
   );
   return (
     <div className="kumbu-card p-5 space-y-3">
-      <p className="text-sm font-semibold">Criar admin</p>
+      <p className="text-sm font-semibold">Promover utilizador existente a admin</p>
+      <p className="text-xs text-slate-500">
+        A conta tem de estar registada na app. Indica o e-mail do utilizador.
+      </p>
       <FeedbackBanner feedback={state} />
-      <form action={action} className="grid gap-3 sm:grid-cols-4 items-end">
+      <form action={action} className="grid gap-3 sm:grid-cols-3 items-end">
         <label className="space-y-1.5 sm:col-span-2">
           <span className="kumbu-label">E-mail</span>
           <input type="email" name="email" required className="kumbu-input" />
-        </label>
-        <label className="space-y-1.5">
-          <span className="kumbu-label">Palavra-passe inicial</span>
-          <input
-            type="password"
-            name="password"
-            required
-            minLength={8}
-            className="kumbu-input"
-          />
         </label>
         <label className="space-y-1.5">
           <span className="kumbu-label">Função</span>
@@ -62,7 +55,7 @@ export function InviteAdminForm() {
             <option value="super_admin">Super Admin</option>
           </select>
         </label>
-        <Submit icon={UserPlus}>Criar</Submit>
+        <Submit icon={UserPlus}>Promover</Submit>
       </form>
     </div>
   );

@@ -13,9 +13,12 @@ export default function ForbiddenPage() {
         </span>
         <h1 className="mt-4 text-xl font-bold">Sem permissões de administrador</h1>
         <p className="mt-2 text-sm text-slate-500">
-          A sua conta não está registada como administradora. Peça a um super
-          admin para adicionar o seu utilizador na tabela{" "}
-          <code className="rounded bg-slate-100 px-1.5 py-0.5">admin_users</code>.
+          Esta conta não tem acesso ao painel. Entra com as credenciais de admin
+          criadas pelo backend (por defeito{" "}
+          <code className="rounded bg-slate-100 px-1.5 py-0.5">admin@kumbu.app</code>
+          ). Se precisares de promover outro utilizador, um super admin pode
+          fazê-lo em <strong>Administradores</strong> ou via API{" "}
+          <code className="rounded bg-slate-100 px-1.5 py-0.5">POST /admin/system/admins</code>.
         </p>
         <div className="mt-6 flex items-center justify-center gap-2">
           <form action={logoutAction}>

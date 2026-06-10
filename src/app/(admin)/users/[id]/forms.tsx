@@ -9,15 +9,26 @@ import {
   KeyRound,
   ShieldCheck,
   ShieldOff,
+  RotateCcw,
+  Download,
+  ShieldBan,
 } from "lucide-react";
 import {
   updateUserAction,
   deleteUserAction,
+  restoreUserAction,
+  banUserAction,
+  unbanUserAction,
   promoteAdminAction,
   demoteAdminAction,
   sendPasswordResetAction,
   type ActionState,
 } from "../actions";
+import {
+  BAN_DURATION_OPTIONS,
+  isUserCurrentlyBanned,
+  type UserBanFields,
+} from "@/lib/user-ban";
 import { FeedbackBanner } from "@/components/ui/toast";
 
 function Btn({
@@ -52,6 +63,11 @@ export function UpdateUserForm({
     email: string | null;
     display_name: string | null;
     phone: string | null;
+    gender?: string | null;
+    birth_date?: string | null;
+    city?: string | null;
+    region?: string | null;
+    country?: string | null;
   };
 }) {
   const [state, action] = useActionState<ActionState, FormData>(
@@ -71,6 +87,16 @@ export function UpdateUserForm({
           type="email"
           defaultValue={user.email ?? ""}
         />
+        <Field label="Género" name="gender" defaultValue={user.gender ?? ""} />
+        <Field
+          label="Data de nascimento"
+          name="birth_date"
+          type="date"
+          defaultValue={user.birth_date?.slice(0, 10) ?? ""}
+        />
+        <Field label="Cidade" name="city" defaultValue={user.city ?? ""} />
+        <Field label="Região" name="region" defaultValue={user.region ?? ""} />
+        <Field label="País" name="country" defaultValue={user.country ?? ""} />
       </div>
       <div>
         <Btn
@@ -100,6 +126,142 @@ export function PasswordResetForm({ email }: { email: string | null }) {
         className="kumbu-btn-ghost"
       >
         Enviar reset de palavra-passe
+      </Btn>
+    </form>
+  );
+}
+
+export function ExportUserButton({ userId }: { userId: string }) {
+  return (
+    <a
+      href={`/users/${userId}/export`}
+      className="kumbu-btn-ghost inline-flex items-center gap-2"
+      download
+    >
+      <Download className="h-4 w-4" />
+      Exportar JSON
+    </a>
+  );
+}
+
+export function BanUserForm({ id }: { id: string }) {
+  const [state, action] = useActionState<ActionState, FormData>(
+    banUserAction,
+    null,
+  );
+  return (
+    <form
+      action={action}
+      onSubmit={(e) => {
+        if (
+          !confirm(
+            "Banir este utilizador? Não poderá publicar, comprar nem enviar mensagens durante o período escolhido.",
+          )
+        ) {
+          e.preventDefault();
+        }
+      }}
+      className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4"
+    >
+      <input type="hidden" name="id" value={id} />
+      <FeedbackBanner feedback={state} />
+      <p className="text-sm font-semibold text-amber-950">Banir utilizador</p>
+      <label className="block text-xs font-medium text-amber-900">
+        Duração
+        <select name="duration" className="kumbu-input mt-1 w-full" defaultValue="7d">
+          {BAN_DURATION_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-xs font-medium text-amber-900">
+        Motivo (opcional)
+        <textarea
+          name="reason"
+          rows={2}
+          className="kumbu-input mt-1 w-full resize-y"
+          placeholder="Ex.: fraude, spam, violação das regras…"
+        />
+      </label>
+      <Btn
+        icon={ShieldBan}
+        pendingLabel="A banir..."
+        className="kumbu-btn-danger w-full"
+      >
+        Aplicar banimento
+      </Btn>
+    </form>
+  );
+}
+
+export function UnbanUserForm({ id }: { id: string }) {
+  const [state, action] = useActionState<ActionState, FormData>(
+    unbanUserAction,
+    null,
+  );
+  return (
+    <form
+      action={action}
+      onSubmit={(e) => {
+        if (!confirm("Remover o banimento deste utilizador?")) e.preventDefault();
+      }}
+      className="space-y-2"
+    >
+      <input type="hidden" name="id" value={id} />
+      <FeedbackBanner feedback={state} />
+      <Btn
+        icon={ShieldCheck}
+        pendingLabel="A remover ban…"
+        className="kumbu-btn-primary w-full"
+      >
+        Remover banimento
+      </Btn>
+    </form>
+  );
+}
+
+export function UserBanPanel({
+  id,
+  user,
+}: {
+  id: string;
+  user: UserBanFields;
+}) {
+  if (user.deleted_at) return null;
+  if (isUserCurrentlyBanned(user)) {
+    return <UnbanUserForm id={id} />;
+  }
+  return <BanUserForm id={id} />;
+}
+
+export function RestoreUserForm({ id }: { id: string }) {
+  const [state, action] = useActionState<ActionState, FormData>(
+    restoreUserAction,
+    null
+  );
+  return (
+    <form
+      action={action}
+      onSubmit={(e) => {
+        if (
+          !confirm(
+            "Restaurar esta conta? O utilizador voltará a aparecer como activo na app."
+          )
+        )
+          e.preventDefault();
+      }}
+      className="space-y-2"
+    >
+      <input type="hidden" name="id" value={id} />
+      <FeedbackBanner feedback={state} />
+      <Btn
+        icon={RotateCcw}
+        pendingLabel="A restaurar..."
+        className="kumbu-btn-primary w-full"
+      >
+        Restaurar conta eliminada
       </Btn>
     </form>
   );

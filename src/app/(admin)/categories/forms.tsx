@@ -209,7 +209,7 @@ function SubcategoryRow({ sub }: { sub: CatalogSubcategory }) {
     upsertSubcategoryAction,
     null
   );
-  const [, del] = useActionState<ActionState, FormData>(
+  const [, del, isDeleting] = useActionState<ActionState, FormData>(
     deleteSubcategoryAction,
     null
   );
@@ -217,6 +217,7 @@ function SubcategoryRow({ sub }: { sub: CatalogSubcategory }) {
     <li>
       <form action={action} className="grid gap-2 sm:grid-cols-5 items-end">
         <input type="hidden" name="category_id" value={sub.category_id} />
+        <input type="hidden" name="existing" value="1" />
         <FieldCompact label="ID" name="id" defaultValue={sub.id} readOnly />
         <FieldCompact label="Etiqueta" name="label" defaultValue={sub.label} />
         <FieldCompact
@@ -226,34 +227,24 @@ function SubcategoryRow({ sub }: { sub: CatalogSubcategory }) {
           defaultValue={String(sub.sort_order)}
         />
         <Submit icon={Save}>Guardar</Submit>
-        <SubDelete categoryId={sub.category_id} id={sub.id} del={del} />
+        <button
+          type="submit"
+          formAction={del}
+          disabled={isDeleting}
+          className="kumbu-btn-danger"
+          onClick={(e) => {
+            if (!confirm("Eliminar subcategoria?")) e.preventDefault();
+          }}
+        >
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+          Eliminar
+        </button>
       </form>
     </li>
-  );
-}
-
-function SubDelete({
-  categoryId,
-  id,
-  del,
-}: {
-  categoryId: string;
-  id: string;
-  del: (fd: FormData) => void;
-}) {
-  return (
-    <form
-      action={del}
-      onSubmit={(e) => {
-        if (!confirm("Eliminar subcategoria?")) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="category_id" value={categoryId} />
-      <input type="hidden" name="id" value={id} />
-      <Submit icon={Trash2} className="kumbu-btn-danger">
-        Eliminar
-      </Submit>
-    </form>
   );
 }
 

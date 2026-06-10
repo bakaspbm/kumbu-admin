@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, UserPlus } from "lucide-react";
-import { bootstrapAdminAction, type BootstrapState } from "./actions";
+import type { BootstrapState } from "@/lib/action-state";
+import { bootstrapAdminAction } from "./actions";
 import { useAuthRedirect } from "./use-auth-redirect";
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {

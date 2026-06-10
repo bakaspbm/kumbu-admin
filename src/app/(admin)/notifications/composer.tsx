@@ -34,6 +34,11 @@ export function NotificationComposer({
   return (
     <div className="kumbu-card p-5 space-y-4">
       <p className="text-sm font-semibold">Compor notificação</p>
+      <p className="text-xs text-slate-500">
+        Os utilizadores veem isto em <strong>Conta → Alertas</strong> (site) ou no
+        separador de notificações na app — não na lista de Mensagens (chat com
+        vendedores).
+      </p>
       <FeedbackBanner feedback={state} />
       <form action={action} className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">

@@ -7,7 +7,7 @@ import {
   Users,
   ShoppingBag,
   Package,
-  Bell,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ const NAV = [
   { href: "/users", label: "Users", icon: Users },
   { href: "/orders", label: "Pedidos", icon: ShoppingBag },
   { href: "/products", label: "Produtos", icon: Package },
-  { href: "/notifications", label: "Notif.", icon: Bell },
+  { href: "/reports", label: "Denúnc.", icon: Flag },
 ];
 
 export function MobileNav() {

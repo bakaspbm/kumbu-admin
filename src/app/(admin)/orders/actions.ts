@@ -1,64 +1,108 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+
 import { logAudit, requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type ActionState = { ok?: boolean; message?: string } | null;
+import { adminDelete, adminPatch } from "@/lib/admin-data";
 
-const statusSchema = z.object({
-  id: z.string().min(1),
-  status: z.enum(["processing", "shipping", "delivered", "cancelled"]),
-});
+import type { ActionState } from "@/lib/action-state";
+
+import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
+
+
+
+export type { ActionState };
+
+
 
 export async function updateOrderStatusAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const parsed = statusSchema.safeParse({
-    id: formData.get("id"),
-    status: formData.get("status"),
-  });
-  if (!parsed.success) return { ok: false, message: "Dados inválidos." };
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      status: parsed.data.status,
-      show_track: parsed.data.status !== "delivered" && parsed.data.status !== "cancelled",
-    })
-    .eq("id", parsed.data.id);
-  if (error) return { ok: false, message: error.message };
+  try {
 
-  await logAudit({
-    action: "order.update_status",
-    entity: "orders",
-    entityId: parsed.data.id,
-    payload: { status: parsed.data.status },
-  });
+    await requireAdmin();
 
-  revalidatePath("/orders");
-  revalidatePath("/dashboard");
-  return { ok: true, message: "Estado atualizado." };
+    const id = formDataString(formData, "id");
+
+    const status = formDataString(formData, "status");
+
+    if (!id) return { ok: false, message: "ID em falta." };
+
+    const show_track = status !== "delivered" && status !== "cancelled";
+
+
+
+    await adminPatch("orders", id, { status, show_track });
+
+    await logAudit({
+
+      action: "order.update_status",
+
+      entity: "orders",
+
+      entityId: id,
+
+      payload: { status },
+
+    });
+
+    revalidatePath("/orders");
+
+    revalidatePath("/dashboard");
+
+    return { ok: true, message: "Estado atualizado." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
+  }
+
 }
+
+
 
 export async function deleteOrderAction(
+
   _prev: ActionState,
+
   formData: FormData
+
 ): Promise<ActionState> {
-  await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return { ok: false, message: "ID em falta." };
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("orders").delete().eq("id", id);
-  if (error) return { ok: false, message: error.message };
+  try {
 
-  await logAudit({ action: "order.delete", entity: "orders", entityId: id });
-  revalidatePath("/orders");
-  revalidatePath("/dashboard");
-  return { ok: true, message: "Pedido eliminado." };
+    await requireAdmin();
+
+    const id = formDataString(formData, "id");
+
+    if (!id) return { ok: false, message: "ID em falta." };
+
+
+
+    await adminDelete("orders", id);
+
+    await logAudit({ action: "order.delete", entity: "orders", entityId: id });
+
+    revalidatePath("/orders");
+
+    revalidatePath("/dashboard");
+
+    return { ok: true, message: "Pedido eliminado." };
+
+  } catch (e) {
+
+    return toActionState(e);
+
+  }
+
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import { useFormStatus } from "react-dom";
 import { Loader2, Trash2 } from "lucide-react";
 import { deleteProductAction, type ActionState } from "../actions";
@@ -25,6 +26,7 @@ export function DeleteProductButton({ id }: { id: string }) {
     deleteProductAction,
     null
   );
+  useRouterRefreshOnActions(state);
   return (
     <div>
       <FeedbackBanner feedback={state} />
