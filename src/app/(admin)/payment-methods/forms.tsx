@@ -1,12 +1,13 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckCircle2, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import {
   upsertPaymentAction,
   deletePaymentAction,
-  type ActionState,
 } from "./actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 import type { PaymentMethod } from "@/lib/types";
@@ -70,7 +71,7 @@ export function PaymentForm({
     upsertPaymentAction,
     null
   );
-  const [, del] = useActionState<ActionState, FormData>(
+  const [, del, isDeleting] = useActionState<ActionState, FormData>(
     deletePaymentAction,
     null
   );
@@ -127,17 +128,22 @@ export function PaymentForm({
             {isNew ? "Criar" : "Guardar"}
           </Submit>
           {!isNew && method && (
-            <form
-              action={del}
-              onSubmit={(e) => {
+            <button
+              type="submit"
+              formAction={del}
+              disabled={isDeleting}
+              className="kumbu-btn-danger"
+              onClick={(e) => {
                 if (!confirm("Eliminar este método?")) e.preventDefault();
               }}
             >
-              <input type="hidden" name="id" value={method.id} />
-              <Submit icon={Trash2} className="kumbu-btn-danger">
-                Eliminar
-              </Submit>
-            </form>
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Eliminar
+            </button>
           )}
         </div>
       </form>

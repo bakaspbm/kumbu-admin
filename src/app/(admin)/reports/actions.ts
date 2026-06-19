@@ -8,8 +8,6 @@ import type { ActionState } from "@/lib/action-state";
 import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
 import type { ContentReportStatus } from "@/lib/types";
 
-export type { ActionState };
-
 async function patchReport(
   id: string,
   patch: {

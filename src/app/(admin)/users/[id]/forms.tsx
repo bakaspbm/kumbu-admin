@@ -1,5 +1,7 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import {
@@ -22,10 +24,10 @@ import {
   promoteAdminAction,
   demoteAdminAction,
   sendPasswordResetAction,
-  type ActionState,
 } from "../actions";
 import {
   BAN_DURATION_OPTIONS,
+  formatBanStatusLabel,
   isUserCurrentlyBanned,
   type UserBanFields,
 } from "@/lib/user-ban";
@@ -52,6 +54,36 @@ function Btn({
       )}
       {pending ? pendingLabel : children}
     </button>
+  );
+}
+
+export function VerifiedUserForm({
+  id,
+  sellerVerified,
+}: {
+  id: string;
+  sellerVerified?: boolean;
+}) {
+  const [state, action] = useActionState<ActionState, FormData>(updateUserAction, null);
+  return (
+    <form action={action} className="kumbu-panel-success space-y-2">
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="seller_verified" value={sellerVerified ? "false" : "true"} />
+      <FeedbackBanner feedback={state} />
+      <p className="kumbu-panel-title text-sm font-semibold">
+        {sellerVerified ? "Utilizador verificado" : "Sem verificação"}
+      </p>
+      <p className="kumbu-panel-label text-xs">
+        A tag «Verificado» aparece no perfil e nas conversas quando activa.
+      </p>
+      <Btn
+        icon={ShieldCheck}
+        pendingLabel="A actualizar..."
+        className={sellerVerified ? "kumbu-btn-ghost" : "kumbu-btn-primary"}
+      >
+        {sellerVerified ? "Remover verificado" : "Marcar como verificado"}
+      </Btn>
+    </form>
   );
 }
 
@@ -155,18 +187,18 @@ export function BanUserForm({ id }: { id: string }) {
       onSubmit={(e) => {
         if (
           !confirm(
-            "Banir este utilizador? Não poderá publicar, comprar nem enviar mensagens durante o período escolhido.",
+            "Suspender este utilizador? Não poderá publicar, comprar nem enviar mensagens durante o período escolhido.",
           )
         ) {
           e.preventDefault();
         }
       }}
-      className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4"
+      className="kumbu-panel-warning space-y-3"
     >
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
-      <p className="text-sm font-semibold text-amber-950">Banir utilizador</p>
-      <label className="block text-xs font-medium text-amber-900">
+      <p className="kumbu-panel-title text-sm font-semibold">Suspender utilizador</p>
+      <label className="kumbu-panel-label block text-xs font-medium">
         Duração
         <select name="duration" className="kumbu-input mt-1 w-full" defaultValue="7d">
           {BAN_DURATION_OPTIONS.map((o) => (
@@ -176,7 +208,7 @@ export function BanUserForm({ id }: { id: string }) {
           ))}
         </select>
       </label>
-      <label className="block text-xs font-medium text-amber-900">
+      <label className="kumbu-panel-label block text-xs font-medium">
         Motivo (opcional)
         <textarea
           name="reason"
@@ -190,13 +222,13 @@ export function BanUserForm({ id }: { id: string }) {
         pendingLabel="A banir..."
         className="kumbu-btn-danger w-full"
       >
-        Aplicar banimento
+        Aplicar suspensão
       </Btn>
     </form>
   );
 }
 
-export function UnbanUserForm({ id }: { id: string }) {
+export function UnbanUserForm({ id, user }: { id: string; user?: UserBanFields }) {
   const [state, action] = useActionState<ActionState, FormData>(
     unbanUserAction,
     null,
@@ -205,18 +237,33 @@ export function UnbanUserForm({ id }: { id: string }) {
     <form
       action={action}
       onSubmit={(e) => {
-        if (!confirm("Remover o banimento deste utilizador?")) e.preventDefault();
+        if (!confirm("Cancelar a suspensão deste utilizador? Voltará a poder usar a plataforma.")) {
+          e.preventDefault();
+        }
       }}
-      className="space-y-2"
+      className="kumbu-panel-warning space-y-3 rounded-xl border p-4"
     >
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
+      <p className="kumbu-panel-title text-sm font-semibold">Conta suspensa</p>
+      {user ? (
+        <p className="kumbu-panel-label text-xs">{formatBanStatusLabel(user)}</p>
+      ) : null}
+      {user?.ban_reason ? (
+        <p className="kumbu-panel-label text-xs">
+          <span className="font-semibold">Motivo:</span> {user.ban_reason}
+        </p>
+      ) : null}
+      <p className="kumbu-panel-label text-xs">
+        O utilizador vê um aviso no site com opção de contactar o suporte. Use o botão abaixo para
+        levantar a suspensão.
+      </p>
       <Btn
         icon={ShieldCheck}
-        pendingLabel="A remover ban…"
+        pendingLabel="A cancelar suspensão…"
         className="kumbu-btn-primary w-full"
       >
-        Remover banimento
+        Cancelar suspensão
       </Btn>
     </form>
   );
@@ -231,7 +278,7 @@ export function UserBanPanel({
 }) {
   if (user.deleted_at) return null;
   if (isUserCurrentlyBanned(user)) {
-    return <UnbanUserForm id={id} />;
+    return <UnbanUserForm id={id} user={user} />;
   }
   return <BanUserForm id={id} />;
 }

@@ -1,5 +1,7 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import type { ContentReport } from "@/lib/types";
@@ -10,7 +12,6 @@ import {
   removeListingFromReportAction,
   resolveReportAction,
   suspendUserFromReportAction,
-  type ActionState,
 } from "./actions";
 
 export function ReportModerationPanel({

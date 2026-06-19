@@ -12,6 +12,7 @@ export function AdminShell({
   pendingIdentityCount = 0,
   pendingApplicationsCount = 0,
   pendingRentalsCount = 0,
+  monetizationGateReview = 0,
   children,
 }: {
   session: AdminSession;
@@ -20,6 +21,7 @@ export function AdminShell({
   pendingIdentityCount?: number;
   pendingApplicationsCount?: number;
   pendingRentalsCount?: number;
+  monetizationGateReview?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -31,6 +33,7 @@ export function AdminShell({
         pendingIdentityCount={pendingIdentityCount}
         pendingApplicationsCount={pendingApplicationsCount}
         pendingRentalsCount={pendingRentalsCount}
+        monetizationGateReview={monetizationGateReview}
       />
       <div className="flex flex-1 min-w-0 flex-col">
         <Topbar session={session} />

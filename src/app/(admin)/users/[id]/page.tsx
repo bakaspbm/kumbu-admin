@@ -44,8 +44,8 @@ import {
   UpdateUserForm,
   UserBanPanel,
 } from "./forms";
-import { formatBanStatusLabel, isUserCurrentlyBanned } from "@/lib/user-ban";
 import { UserReportsSection } from "@/components/users/user-reports-section";
+import { UserClientTrustPanel } from "@/components/users/user-client-trust-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +70,8 @@ export default async function UserDetailPage({
     ]);
 
   if (!user) notFound();
+
+  const identity = user.identity_verification ?? null;
 
   const activeListings = listings.filter((p) => !p.deleted_at).length;
 
@@ -152,6 +154,24 @@ export default async function UserDetailPage({
                   Admin · {adminRow.role}
                 </span>
               )}
+              {user.seller_verified && (
+                <span className="mt-1 inline-block kumbu-badge bg-emerald-100 text-emerald-800 text-[10px]">
+                  Verificado
+                </span>
+              )}
+              {identity && identity.status !== "NOT_SUBMITTED" && (
+                <span
+                  className={`mt-1 inline-block kumbu-badge text-[10px] ${
+                    identity.status === "APPROVED"
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                      : identity.status === "REJECTED"
+                        ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
+                        : "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
+                  }`}
+                >
+                  KYC {identity.status === "PENDING" ? "pendente" : identity.status === "APPROVED" ? "ok" : "rejeitado"}
+                </span>
+              )}
             </div>
           </div>
           <dl className="mt-5 space-y-3 text-sm">
@@ -210,6 +230,12 @@ export default async function UserDetailPage({
           <UpdateUserForm user={user} />
         </div>
       </section>
+
+      <UserClientTrustPanel
+        userId={user.id}
+        sellerVerified={user.seller_verified === true}
+        identity={identity}
+      />
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="kumbu-card p-5">
@@ -286,14 +312,6 @@ export default async function UserDetailPage({
             {!user.deleted_at && (
               <>
                 <UserBanPanel id={user.id} user={user} />
-                {isUserCurrentlyBanned(user) && user.ban_reason && (
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-                    <span className="font-semibold">Motivo:</span> {user.ban_reason}
-                  </p>
-                )}
-                {isUserCurrentlyBanned(user) && (
-                  <p className="text-xs text-slate-500">{formatBanStatusLabel(user)}</p>
-                )}
                 <PasswordResetForm email={user.email} />
                 <PromoteAdminForm
                   id={user.id}

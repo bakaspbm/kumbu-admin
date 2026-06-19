@@ -1,9 +1,11 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Save } from "lucide-react";
-import { saveSupportAction, type ActionState } from "./actions";
+import { saveSupportAction } from "./actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 import type { SupportSettings } from "@/lib/types";
 

@@ -52,6 +52,27 @@ export async function loginWithKumbuApi(input: {
   return response;
 }
 
+export async function logoutFromKumbuApi(): Promise<void> {
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get(ADMIN_REFRESH_COOKIE)?.value;
+  if (refreshToken?.trim()) {
+    try {
+      await kumbuApiFetch<void>(
+        "/auth/logout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        },
+        { withAuth: false },
+      );
+    } catch {
+      // Mesmo com falha de rede, limpamos cookies locais
+    }
+  }
+  await clearKumbuApiAuthCookies();
+}
+
 export async function clearKumbuApiAuthCookies() {
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_ACCESS_COOKIE, "", {

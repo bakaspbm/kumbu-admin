@@ -1,10 +1,12 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import { useFormStatus } from "react-dom";
 import { Loader2, Trash2 } from "lucide-react";
-import { deleteProductAction, type ActionState } from "../actions";
+import { deleteProductAction } from "../actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 
 function Btn() {

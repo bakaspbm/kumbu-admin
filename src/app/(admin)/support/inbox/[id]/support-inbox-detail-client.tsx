@@ -1,14 +1,90 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bot, Headset, Loader2, Paperclip, UserRound } from "lucide-react";
+import type { SupportMessageItem } from "@/lib/kumbu-api/support-inbox";
 import type { SupportConversationDetail } from "@/lib/kumbu-api/support-inbox";
 import { formatDateTime } from "@/lib/utils";
 import {
   closeSupportConversationAction,
   replySupportConversationAction,
 } from "../actions";
+import { uploadSupportAttachmentAction } from "../upload-attachment-action";
+
+function attachmentLabel(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.toLowerCase().includes(".pdf") ? "PDF" : "Imagem";
+}
+
+function messageSenderLabel(
+  msg: SupportMessageItem,
+  userName: string | null | undefined,
+): string {
+  if (msg.from_support) return "Kumbú Suporte";
+  if (msg.message_kind === "bot") return "Bot Kumbú";
+  return userName?.trim() || "Utilizador";
+}
+
+function MessageBubble({
+  msg,
+  userName,
+}: {
+  msg: SupportMessageItem;
+  userName: string | null | undefined;
+}) {
+  const isSupport = msg.from_support;
+  const isBot = !isSupport && msg.message_kind === "bot";
+  const label = messageSenderLabel(msg, userName);
+  const hasBody = Boolean(msg.body?.trim() && msg.body !== "📎 Ficheiro partilhado");
+
+  const bubbleClass = isSupport
+    ? "kumbu-chat-bubble-support"
+    : isBot
+      ? "kumbu-chat-bubble-bot"
+      : "kumbu-chat-bubble-user";
+
+  const Icon = isSupport ? Headset : isBot ? Bot : UserRound;
+
+  return (
+    <li className={`flex ${isSupport ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`flex max-w-[min(88%,32rem)] flex-col gap-1.5 ${isSupport ? "items-end" : "items-start"}`}
+      >
+        <div
+          className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide ${
+            isSupport ? "text-kumbu-red" : "text-[var(--kumbu-ink-subtle)]"
+          }`}
+        >
+          <Icon className="size-3.5 shrink-0" aria-hidden />
+          <span>{label}</span>
+          <span className="font-normal normal-case tracking-normal text-[var(--kumbu-ink-subtle)]">
+            · {formatDateTime(msg.created_at)}
+          </span>
+        </div>
+
+        <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${bubbleClass}`}>
+          {msg.attachment_url ? (
+            <a
+              href={msg.attachment_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-2 inline-flex items-center gap-1 rounded-lg border border-[var(--kumbu-border)] bg-[var(--kumbu-surface)] px-2.5 py-1.5 text-xs font-semibold text-kumbu-red transition hover:opacity-90"
+            >
+              {attachmentLabel(msg.attachment_url)} — abrir ficheiro
+            </a>
+          ) : null}
+
+          {hasBody ? (
+            <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+          ) : msg.attachment_url ? null : (
+            <p className="italic text-[var(--kumbu-ink-subtle)]">Mensagem sem texto</p>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
 
 export function SupportInboxDetailClient({
   conversation,
@@ -18,7 +94,31 @@ export function SupportInboxDetailClient({
   const [messages, setMessages] = useState(conversation.messages);
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [attachBusy, setAttachBusy] = useState(false);
   const [pending, startTransition] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
+
+  function pushLocalReply(text: string, attachmentUrl?: string | null) {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `local-${Date.now()}`,
+        sender_id: "support",
+        body: text || "📎 Ficheiro partilhado",
+        message_kind: attachmentUrl ? "attachment" : "support",
+        attachment_url: attachmentUrl ?? null,
+        created_at: new Date().toISOString(),
+        from_support: true,
+      },
+    ]);
+  }
 
   function handleReply(e: React.FormEvent) {
     e.preventDefault();
@@ -31,19 +131,32 @@ export function SupportInboxDetailClient({
         setError(result.error);
         return;
       }
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `local-${Date.now()}`,
-          sender_id: "support",
-          body: text,
-          message_kind: "support",
-          created_at: new Date().toISOString(),
-          from_support: true,
-        },
-      ]);
+      pushLocalReply(text);
       setBody("");
     });
+  }
+
+  async function handleAttach(file: File) {
+    if (pending || attachBusy) return;
+    setAttachBusy(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const upload = await uploadSupportAttachmentAction(formData);
+      if (!upload.ok) {
+        setError(upload.error);
+        return;
+      }
+      const result = await replySupportConversationAction(conversation.id, "", upload.url);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      pushLocalReply("", upload.url);
+    } finally {
+      setAttachBusy(false);
+    }
   }
 
   function handleClose() {
@@ -58,7 +171,7 @@ export function SupportInboxDetailClient({
     <div className="space-y-6">
       <Link
         href="/support/inbox"
-        className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-kumbu-red"
+        className="inline-flex items-center gap-1 text-sm font-medium text-[var(--kumbu-ink-muted)] hover:text-kumbu-red"
       >
         <ArrowLeft className="h-4 w-4" />
         Voltar à fila
@@ -67,14 +180,29 @@ export function SupportInboxDetailClient({
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="kumbu-card space-y-3 p-5 lg:col-span-1">
           <p className="kumbu-label">Utilizador</p>
-          <p className="font-semibold">{conversation.user_name ?? "—"}</p>
-          <p className="text-sm text-slate-500">{conversation.user_email}</p>
-          <p className="text-xs text-slate-400">
-            Estado: <span className="font-semibold">{conversation.support_status}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold">{conversation.user_name ?? "—"}</p>
+            {conversation.guest ? (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                Visitante
+              </span>
+            ) : null}
+          </div>
+          <p className="text-sm text-[var(--kumbu-ink-muted)]">{conversation.user_email}</p>
+          <p className="text-xs text-[var(--kumbu-ink-subtle)]">
+            Estado:{" "}
+            <span className="font-semibold capitalize text-[var(--kumbu-ink)]">
+              {conversation.support_status.replace(/_/g, " ")}
+            </span>
           </p>
-          <Link href={`/users/${conversation.user_id}`} className="text-sm font-semibold text-kumbu-red">
-            Ver perfil →
-          </Link>
+          {!conversation.guest && conversation.user_id ? (
+            <Link
+              href={`/users/${conversation.user_id}`}
+              className="inline-flex text-sm font-semibold text-kumbu-red hover:underline"
+            >
+              Ver perfil →
+            </Link>
+          ) : null}
           <button
             type="button"
             disabled={pending}
@@ -85,36 +213,87 @@ export function SupportInboxDetailClient({
           </button>
         </div>
 
-        <div className="kumbu-card flex flex-col p-5 lg:col-span-2">
-          <p className="kumbu-label mb-4">Mensagens ({messages.length})</p>
-          <ul className="mb-4 max-h-[420px] flex-1 space-y-3 overflow-y-auto pr-1">
-            {messages.map((msg) => (
-              <li
-                key={msg.id}
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                  msg.from_support
-                    ? "ml-auto bg-kumbu-red-soft text-kumbu-ink"
-                    : "bg-slate-100 text-slate-800"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{msg.body}</p>
-                <p className="mt-1 text-[10px] opacity-60">{formatDateTime(msg.created_at)}</p>
+        <div className="kumbu-card flex min-h-[520px] flex-col p-5 lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <p className="kumbu-label">Mensagens ({messages.length})</p>
+            {(pending || attachBusy) && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[var(--kumbu-ink-subtle)]">
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                A enviar…
+              </span>
+            )}
+          </div>
+
+          <ul
+            ref={listRef}
+            className="mb-4 min-h-[280px] flex-1 space-y-4 overflow-y-auto rounded-xl border border-[var(--kumbu-border)] bg-[var(--kumbu-surface-muted)] p-4"
+          >
+            {messages.length === 0 ? (
+              <li className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 text-center">
+                <Headset className="size-8 text-[var(--kumbu-ink-subtle)]" aria-hidden />
+                <p className="text-sm font-medium text-[var(--kumbu-ink-muted)]">
+                  Ainda não há mensagens nesta conversa
+                </p>
+                <p className="max-w-xs text-xs text-[var(--kumbu-ink-subtle)]">
+                  Quando o utilizador escrever ou o bot responder, as mensagens aparecem aqui.
+                </p>
               </li>
-            ))}
+            ) : (
+              messages.map((msg) => (
+                <MessageBubble key={msg.id} msg={msg} userName={conversation.user_name} />
+              ))
+            )}
           </ul>
-          {error ? <p className="mb-2 text-sm text-rose-600">{error}</p> : null}
+
+          {error ? (
+            <p className="kumbu-alert kumbu-alert-error mb-3" role="alert">
+              {error}
+            </p>
+          ) : null}
+
           <form onSubmit={handleReply} className="flex gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleAttach(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              disabled={pending || attachBusy}
+              onClick={() => fileRef.current?.click()}
+              className="kumbu-btn-ghost shrink-0 px-3"
+              aria-label="Anexar ficheiro"
+            >
+              <Paperclip className={`h-4 w-4 ${attachBusy ? "animate-pulse" : ""}`} />
+            </button>
             <input
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Responder como Kumbú Suporte…"
               className="kumbu-input flex-1"
-              disabled={pending}
+              disabled={pending || attachBusy}
             />
-            <button type="submit" disabled={pending || !body.trim()} className="kumbu-btn-primary shrink-0">
-              {pending ? "…" : "Enviar"}
+            <button
+              type="submit"
+              disabled={pending || attachBusy || !body.trim()}
+              className="kumbu-btn-primary shrink-0 min-w-[5.5rem]"
+            >
+              {pending || attachBusy ? (
+                <Loader2 className="mx-auto size-4 animate-spin" aria-hidden />
+              ) : (
+                "Enviar"
+              )}
             </button>
           </form>
+          <p className="mt-2 text-[10px] text-[var(--kumbu-ink-subtle)]">
+            Imagens ou PDF até 10 MB · o utilizador vê o anexo no chat de suporte
+          </p>
         </div>
       </div>
     </div>

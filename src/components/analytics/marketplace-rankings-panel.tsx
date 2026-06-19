@@ -45,7 +45,7 @@ export function MarketplaceRankingsPanel({
 }) {
   if (!data) {
     return (
-      <p className="rounded-chip border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <p className="kumbu-panel-warning px-4 py-3 text-sm">
         Rankings indisponíveis. Verifique se o backend Kumbu expõe{" "}
         <code className="text-xs">/admin/analytics/rankings</code>.
       </p>

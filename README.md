@@ -47,7 +47,7 @@ npm install
 npm run dev
 ```
 
-Acede a [http://localhost:3000](http://localhost:3000).
+Acede a [http://localhost:3001](http://localhost:3001).
 
 **Super admin inicial** (criado automaticamente pelo backend na 1.ª execução):
 

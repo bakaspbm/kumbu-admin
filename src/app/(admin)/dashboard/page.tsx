@@ -190,18 +190,12 @@ export default async function DashboardPage() {
 
       {apiErrors.length > 0 && (
 
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-
-          <p className="font-semibold">Alguns dados do dashboard não carregaram.</p>
-
-          <p className="mt-1 text-amber-900/90">
-
+        <div className="kumbu-panel-warning px-4 py-3 text-sm">
+          <p className="kumbu-panel-title font-semibold">Alguns dados do dashboard não carregaram.</p>
+          <p className="kumbu-panel-label mt-1">
             {apiErrors[0]} Verifique se o backend Kumbu está a correr em{" "}
-
-            <code className="rounded bg-amber-100 px-1">localhost:8080</code>.
-
+            <code className="rounded bg-[var(--kumbu-surface-hover)] px-1">localhost:8080</code>.
           </p>
-
         </div>
 
       )}

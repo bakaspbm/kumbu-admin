@@ -18,8 +18,6 @@ import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 
 
 
-export type { ActionState };
-
 
 
 function buildProductPayload(formData: FormData) {

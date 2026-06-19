@@ -92,7 +92,12 @@ function RowActions({ item }: { item: UserNotification }) {
 export function NotificationList({ items }: { items: UserNotification[] }) {
   if (items.length === 0) {
     return (
-      <p className="py-6 text-sm text-slate-500">Ainda não enviaste notificações.</p>
+      <div className="rounded-card border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center">
+        <p className="text-sm font-semibold text-slate-700">Ainda não enviaste notificações</p>
+        <p className="mt-2 text-sm text-slate-500">
+          Quando enviares alertas push ou in-app, aparecem aqui com acções de moderação.
+        </p>
+      </div>
     );
   }
 

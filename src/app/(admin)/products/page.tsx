@@ -4,6 +4,7 @@ import { adminList } from "@/lib/admin-data";
 import { getOptionalAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ProductCover } from "@/components/products/product-cover";
 import { cn } from "@/lib/utils";
 import type { CatalogCategory, CatalogProduct } from "@/lib/types";
 
@@ -63,7 +64,7 @@ export default async function ProductsPage({
               const accent = cat?.accent_hex ?? "5C6BC0";
               return (
                 <Link key={p.id} href={`/products/${p.id}`} className="kumbu-card overflow-hidden hover:shadow-pop transition-shadow">
-                  <div className="aspect-[4/3] w-full" style={{ background: `linear-gradient(135deg, #${accent}33 0%, #${accent}aa 100%)` }} />
+                  <ProductCover product={p} accentHex={accent} />
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2"><h3 className="font-semibold leading-tight">{p.title}</h3>{p.is_featured && (<span className="kumbu-badge bg-amber-100 text-amber-700"><Star className="h-3 w-3" /> Destaque</span>)}</div>
                     <p className="mt-1 text-xs text-slate-500">{cat?.name ?? p.category_id}</p>

@@ -9,6 +9,8 @@ export type SignupAuthMethod =
   | "anonymous"
   | "unknown";
 
+import type { IdentityVerificationDetail } from "@/lib/kumbu-api/identity";
+
 export interface KumbuUser {
   id: string;
   email: string | null;
@@ -33,6 +35,8 @@ export interface KumbuUser {
   cart: unknown;
   favorites: unknown;
   delivery_address: Record<string, unknown> | null;
+  seller_verified?: boolean;
+  identity_verification?: IdentityVerificationDetail | null;
 }
 
 export type OrderStatus = "delivered" | "shipping" | "processing" | "cancelled";
@@ -75,6 +79,8 @@ export interface CatalogProduct {
   discount_percent: number | null;
   delivery_text: string | null;
   image_color: number | null;
+  image_url?: string | null;
+  image_urls?: string[] | null;
   is_featured: boolean;
   is_out_of_stock: boolean;
   sort_order: number;

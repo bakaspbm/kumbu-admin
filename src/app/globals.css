@@ -5,24 +5,116 @@
 :root {
   --kumbu-red: #c62828;
   --kumbu-red-dark: #b71c1c;
+  --kumbu-red-glow: rgba(198, 40, 40, 0.35);
   --kumbu-purple: #6a1b9a;
   --kumbu-blue: #1a237e;
-  --kumbu-bg: #f5f5f5;
+
+  --kumbu-bg: #f0f2f5;
+  --kumbu-bg-accent: linear-gradient(
+    165deg,
+    rgba(211, 47, 47, 0.04) 0%,
+    rgba(106, 27, 154, 0.03) 45%,
+    rgba(26, 35, 126, 0.04) 100%
+  );
+  --kumbu-surface: #ffffff;
+  --kumbu-surface-muted: #f8fafc;
+  --kumbu-surface-hover: #f1f5f9;
+  --kumbu-border: rgba(15, 23, 42, 0.08);
+  --kumbu-border-strong: rgba(15, 23, 42, 0.12);
   --kumbu-ink: #0f172a;
+  --kumbu-ink-muted: #475569;
+  --kumbu-ink-subtle: #64748b;
+  --kumbu-red-soft: #ffebee;
+  --kumbu-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --kumbu-shadow-pop: 0 8px 28px rgba(15, 23, 42, 0.12);
+
+  --kumbu-warning-bg: #fffbeb;
+  --kumbu-warning-border: #fde68a;
+  --kumbu-warning-title: #78350f;
+  --kumbu-warning-label: #92400e;
+  --kumbu-warning-text: #a16207;
+  --kumbu-success-bg: #ecfdf5;
+  --kumbu-success-border: #a7f3d0;
+  --kumbu-success-title: #064e3b;
+  --kumbu-success-label: #047857;
+  --kumbu-success-text: #065f46;
+  --kumbu-danger-bg: #fff1f2;
+  --kumbu-danger-border: #fecdd3;
+  --kumbu-danger-text: #be123c;
+  --kumbu-info-bg: #f0f9ff;
+  --kumbu-info-border: #bae6fd;
+  --kumbu-info-text: #0369a1;
+  color-scheme: light;
+}
+
+.dark {
+  --kumbu-red: #ef5350;
+  --kumbu-red-dark: #e53935;
+  --kumbu-red-glow: rgba(239, 83, 80, 0.25);
+  --kumbu-purple: #ab47bc;
+  --kumbu-blue: #5c6bc0;
+
+  --kumbu-bg: #080b10;
+  --kumbu-bg-accent: radial-gradient(
+      1200px 600px at 10% -10%,
+      rgba(239, 83, 80, 0.08),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 90% 0%,
+      rgba(106, 27, 154, 0.1),
+      transparent 50%
+    ),
+    #080b10;
+  --kumbu-surface: #121820;
+  --kumbu-surface-muted: #0e131a;
+  --kumbu-surface-hover: #1a222d;
+  --kumbu-border: rgba(255, 255, 255, 0.07);
+  --kumbu-border-strong: rgba(255, 255, 255, 0.11);
+  --kumbu-ink: #f1f5f9;
+  --kumbu-ink-muted: #94a3b8;
+  --kumbu-ink-subtle: #64748b;
+  --kumbu-red-soft: rgba(239, 83, 80, 0.14);
+  --kumbu-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --kumbu-shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.55);
+
+  --kumbu-warning-bg: rgba(245, 158, 11, 0.1);
+  --kumbu-warning-border: rgba(245, 158, 11, 0.28);
+  --kumbu-warning-title: #fde68a;
+  --kumbu-warning-label: #fcd34d;
+  --kumbu-warning-text: #fbbf24;
+  --kumbu-success-bg: rgba(16, 185, 129, 0.1);
+  --kumbu-success-border: rgba(16, 185, 129, 0.28);
+  --kumbu-success-title: #6ee7b7;
+  --kumbu-success-label: #a7f3d0;
+  --kumbu-success-text: #34d399;
+  --kumbu-danger-bg: rgba(244, 63, 94, 0.1);
+  --kumbu-danger-border: rgba(244, 63, 94, 0.28);
+  --kumbu-danger-text: #fda4af;
+  --kumbu-info-bg: rgba(14, 165, 233, 0.1);
+  --kumbu-info-border: rgba(14, 165, 233, 0.28);
+  --kumbu-info-text: #7dd3fc;
+  color-scheme: dark;
 }
 
 html,
 body {
   background: var(--kumbu-bg);
+  background-image: var(--kumbu-bg-accent);
+  background-attachment: fixed;
   color: var(--kumbu-ink);
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.35s ease, color 0.25s ease;
 }
 
 @layer components {
   .kumbu-card {
-    @apply rounded-card bg-white shadow-card border border-slate-100;
+    @apply rounded-card border shadow-card;
+    background-color: var(--kumbu-surface);
+    border-color: var(--kumbu-border);
+    box-shadow: var(--kumbu-shadow-card);
   }
 
   .kumbu-btn-primary {
@@ -32,54 +124,358 @@ body {
            disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
   }
 
+  .kumbu-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-chip
+           px-4 py-2.5 text-sm font-semibold transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--kumbu-surface-hover);
+    color: var(--kumbu-ink);
+    border: 1px solid var(--kumbu-border);
+  }
+  .kumbu-btn-secondary:hover {
+    background-color: var(--kumbu-surface-muted);
+    border-color: var(--kumbu-border-strong);
+  }
+
   .kumbu-btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-chip
-           bg-white px-4 py-2.5 text-sm font-semibold text-kumbu-ink
-           border border-slate-200 hover:bg-slate-50 transition-colors;
+           px-4 py-2.5 text-sm font-semibold transition-colors;
+    background-color: var(--kumbu-surface);
+    color: var(--kumbu-ink);
+    border: 1px solid var(--kumbu-border);
+  }
+  .kumbu-btn-ghost:hover {
+    background-color: var(--kumbu-surface-hover);
   }
 
   .kumbu-btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-chip
-           bg-kumbu-red-soft px-4 py-2.5 text-sm font-semibold text-kumbu-red
-           hover:bg-rose-100 transition-colors;
+           px-4 py-2.5 text-sm font-semibold text-kumbu-red transition-colors;
+    background-color: var(--kumbu-red-soft);
+  }
+  .kumbu-btn-danger:hover {
+    filter: brightness(1.05);
   }
 
   .kumbu-input {
-    @apply w-full rounded-chip border border-slate-200 bg-white px-3.5 py-2.5
-           text-sm text-kumbu-ink placeholder:text-slate-400
-           outline-none transition-colors
-           focus:border-kumbu-red focus:ring-2 focus:ring-kumbu-red/15;
+    @apply w-full rounded-chip px-3.5 py-2.5 text-sm outline-none transition-colors
+           focus:ring-2 focus:ring-kumbu-red/20;
+    background-color: var(--kumbu-surface);
+    border: 1px solid var(--kumbu-border);
+    color: var(--kumbu-ink);
+  }
+  .kumbu-input::placeholder {
+    color: var(--kumbu-ink-subtle);
+  }
+  .kumbu-input:focus {
+    border-color: var(--kumbu-red);
   }
 
   .kumbu-label {
-    @apply text-xs font-medium uppercase tracking-wide text-slate-500;
+    @apply text-xs font-medium uppercase tracking-wide;
+    color: var(--kumbu-ink-subtle);
   }
 
   .kumbu-badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5
-           text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
 
   .kumbu-table {
     @apply w-full text-left text-sm;
   }
   .kumbu-table thead th {
-    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide
-           text-slate-500 bg-slate-50 border-b border-slate-100;
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide border-b;
+    color: var(--kumbu-ink-subtle);
+    background-color: var(--kumbu-surface-muted);
+    border-color: var(--kumbu-border);
   }
   .kumbu-table tbody td {
-    @apply px-4 py-3 border-b border-slate-100 text-slate-700 align-middle;
+    @apply px-4 py-3 border-b align-middle;
+    color: var(--kumbu-ink-muted);
+    border-color: var(--kumbu-border);
   }
   .kumbu-table tbody tr:hover {
-    @apply bg-slate-50/60;
+    background-color: var(--kumbu-surface-hover);
+  }
+
+  .kumbu-shell-sidebar {
+    background-color: var(--kumbu-surface);
+    border-color: var(--kumbu-border);
+  }
+
+  .kumbu-shell-topbar {
+    background-color: color-mix(in srgb, var(--kumbu-surface) 88%, transparent);
+    border-color: var(--kumbu-border);
+    backdrop-filter: blur(12px);
+  }
+
+  .kumbu-nav-link {
+    @apply flex items-center gap-3 rounded-chip px-3 py-2.5 text-sm font-medium transition-colors;
+    color: var(--kumbu-ink-muted);
+  }
+  .kumbu-nav-link:hover {
+    background-color: var(--kumbu-surface-hover);
+    color: var(--kumbu-ink);
+  }
+  .kumbu-nav-link[data-active="true"] {
+    background-color: var(--kumbu-red-soft);
+    color: var(--kumbu-red);
+  }
+
+  /* Painéis de acção / alertas — legíveis em claro e escuro */
+  .kumbu-panel {
+    @apply rounded-xl border p-4;
+    border-color: var(--kumbu-border);
+    background-color: var(--kumbu-surface-muted);
+  }
+
+  .kumbu-panel-warning {
+    border-color: var(--kumbu-warning-border);
+    background-color: var(--kumbu-warning-bg);
+    color: var(--kumbu-warning-text);
+  }
+  .kumbu-panel-warning .kumbu-panel-title {
+    color: var(--kumbu-warning-title);
+  }
+  .kumbu-panel-warning .kumbu-panel-label {
+    color: var(--kumbu-warning-label);
+  }
+
+  .kumbu-panel-success {
+    border-color: var(--kumbu-success-border);
+    background-color: var(--kumbu-success-bg);
+    color: var(--kumbu-success-text);
+  }
+  .kumbu-panel-success .kumbu-panel-title {
+    color: var(--kumbu-success-title);
+  }
+  .kumbu-panel-success .kumbu-panel-label {
+    color: var(--kumbu-success-label);
+  }
+
+  .kumbu-panel-danger {
+    border-color: var(--kumbu-danger-border);
+    background-color: var(--kumbu-danger-bg);
+    color: var(--kumbu-danger-text);
+  }
+
+  .kumbu-panel-info {
+    border-color: var(--kumbu-info-border);
+    background-color: var(--kumbu-info-bg);
+    color: var(--kumbu-info-text);
+  }
+
+  .kumbu-chat-bubble-user {
+    border: 1px solid var(--kumbu-border);
+    background-color: var(--kumbu-surface-muted);
+    color: var(--kumbu-ink);
+  }
+
+  .kumbu-chat-bubble-support {
+    border: 1px solid var(--kumbu-danger-border);
+    background-color: var(--kumbu-danger-bg);
+    color: var(--kumbu-ink);
+  }
+
+  .kumbu-chat-bubble-bot {
+    border: 1px solid var(--kumbu-info-border);
+    background-color: var(--kumbu-info-bg);
+    color: var(--kumbu-ink);
+  }
+
+  .kumbu-alert {
+    @apply flex items-center gap-2 rounded-chip border px-3 py-2 text-sm;
+  }
+  .kumbu-alert-success {
+    border-color: var(--kumbu-success-border);
+    background-color: var(--kumbu-success-bg);
+    color: var(--kumbu-success-title);
+  }
+  .kumbu-alert-error {
+    border-color: var(--kumbu-danger-border);
+    background-color: var(--kumbu-danger-bg);
+    color: var(--kumbu-danger-text);
+  }
+  .kumbu-alert-warning {
+    border-color: var(--kumbu-warning-border);
+    background-color: var(--kumbu-warning-bg);
+    color: var(--kumbu-warning-title);
+  }
+
+  .kumbu-code-block {
+    @apply max-h-48 overflow-auto rounded-chip border p-3 text-xs;
+    border-color: var(--kumbu-border);
+    background-color: var(--kumbu-surface-muted);
+    color: var(--kumbu-ink-muted);
+  }
+}
+
+@layer utilities {
+  .dark .bg-white {
+    background-color: var(--kumbu-surface);
+  }
+  .dark .bg-white\/85 {
+    background-color: color-mix(in srgb, var(--kumbu-surface) 85%, transparent);
+  }
+  .dark .bg-white\/70 {
+    background-color: color-mix(in srgb, var(--kumbu-surface) 70%, transparent);
+  }
+  .dark .bg-slate-50,
+  .dark .bg-slate-50\/60,
+  .dark .bg-slate-50\/80 {
+    background-color: var(--kumbu-surface-muted);
+  }
+  .dark .bg-slate-100 {
+    background-color: var(--kumbu-surface-hover);
+  }
+  .dark .hover\:bg-slate-50:hover {
+    background-color: var(--kumbu-surface-hover);
+  }
+  .dark .text-slate-800 {
+    color: var(--kumbu-ink-muted);
+  }
+  .dark .text-slate-300 {
+    color: var(--kumbu-ink-subtle);
+  }
+  .dark .text-slate-200 {
+    color: var(--kumbu-border-strong);
+  }
+  .dark .text-slate-600 {
+    color: var(--kumbu-ink-muted);
+  }
+  .dark .text-slate-500 {
+    color: var(--kumbu-ink-subtle);
+  }
+  .dark .text-slate-400 {
+    color: var(--kumbu-ink-subtle);
+  }
+  .dark .border-slate-100,
+  .dark .border-slate-200 {
+    border-color: var(--kumbu-border);
+  }
+  .dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--kumbu-border);
+  }
+
+  .dark .bg-emerald-100 {
+    background-color: rgba(16, 185, 129, 0.15);
+  }
+  .dark .bg-rose-100 {
+    background-color: rgba(244, 63, 94, 0.15);
+  }
+  .dark .bg-amber-100,
+  .dark .bg-amber-50,
+  .dark .bg-amber-50\/50,
+  .dark .bg-amber-50\/60,
+  .dark .bg-amber-50\/80 {
+    background-color: var(--kumbu-warning-bg);
+  }
+  .dark .text-amber-600,
+  .dark .text-amber-700,
+  .dark .text-amber-800,
+  .dark .text-amber-900,
+  .dark .text-amber-950 {
+    color: var(--kumbu-warning-title);
+  }
+  .dark .text-amber-900\/90,
+  .dark .text-amber-900\/80 {
+    color: var(--kumbu-warning-label);
+  }
+  .dark .border-amber-200 {
+    border-color: var(--kumbu-warning-border);
+  }
+
+  .dark .bg-emerald-50,
+  .dark .bg-emerald-50\/60 {
+    background-color: var(--kumbu-success-bg);
+  }
+  .dark .text-emerald-600,
+  .dark .text-emerald-700,
+  .dark .text-emerald-800,
+  .dark .text-emerald-900,
+  .dark .text-emerald-950 {
+    color: var(--kumbu-success-title);
+  }
+  .dark .text-emerald-900\/80 {
+    color: var(--kumbu-success-label);
+  }
+  .dark .border-emerald-200 {
+    border-color: var(--kumbu-success-border);
+  }
+  .dark .ring-emerald-200 {
+    --tw-ring-color: var(--kumbu-success-border);
+  }
+
+  .dark .bg-rose-50,
+  .dark .bg-rose-50\/40,
+  .dark .bg-rose-50\/60 {
+    background-color: var(--kumbu-danger-bg);
+  }
+  .dark .text-rose-600,
+  .dark .text-rose-700,
+  .dark .text-rose-800 {
+    color: var(--kumbu-danger-text);
+  }
+  .dark .border-rose-100,
+  .dark .border-rose-200 {
+    border-color: var(--kumbu-danger-border);
+  }
+  .dark .ring-rose-200 {
+    --tw-ring-color: var(--kumbu-danger-border);
+  }
+  .dark .hover\:bg-rose-50:hover,
+  .dark .hover\:bg-rose-100:hover {
+    background-color: var(--kumbu-danger-bg);
+  }
+  .dark .hover\:bg-emerald-50:hover {
+    background-color: var(--kumbu-success-bg);
+  }
+  .dark .hover\:bg-amber-50:hover {
+    background-color: var(--kumbu-warning-bg);
+  }
+
+  .dark .bg-sky-50 {
+    background-color: var(--kumbu-info-bg);
+  }
+  .dark .text-sky-800 {
+    color: var(--kumbu-info-text);
+  }
+  .dark .border-sky-200 {
+    border-color: var(--kumbu-info-border);
+  }
+
+  .dark .ring-amber-200 {
+    --tw-ring-color: var(--kumbu-warning-border);
+  }
+
+  .dark .text-red-800 {
+    color: #fca5a5;
+  }
+  .dark .bg-purple-100 {
+    background-color: rgba(168, 85, 247, 0.15);
+  }
+  .dark .text-kumbu-purple {
+    color: #c084fc;
+  }
+  .dark .bg-indigo-100 {
+    background-color: rgba(99, 102, 241, 0.15);
+  }
+  .dark .text-kumbu-blue {
+    color: #93c5fd;
+  }
+  .dark .text-emerald-700 {
+    color: var(--kumbu-success-title);
   }
 }
 
 ::selection {
-  background: rgba(198, 40, 40, 0.18);
+  background: rgba(198, 40, 40, 0.22);
 }
 
-/* Scrollbar fino */
+.dark ::selection {
+  background: rgba(239, 83, 80, 0.35);
+}
+
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -90,4 +486,10 @@ body {
 }
 *::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.28);
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }

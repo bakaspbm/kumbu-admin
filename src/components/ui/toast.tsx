@@ -16,10 +16,8 @@ export function FeedbackBanner({ feedback }: { feedback: FormFeedback }) {
     <div className="mb-4 space-y-2">
       <div
         className={cn(
-          "flex items-center gap-2 rounded-chip border px-3 py-2 text-sm",
-          ok
-            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-            : "border-rose-200 bg-rose-50 text-rose-700",
+          "kumbu-alert",
+          ok ? "kumbu-alert-success" : "kumbu-alert-error",
         )}
       >
         {ok ? (
@@ -30,7 +28,7 @@ export function FeedbackBanner({ feedback }: { feedback: FormFeedback }) {
         <span>{feedback.message}</span>
       </div>
       {!ok && unmappedFields && unmappedFields.length > 0 ? (
-        <ul className="rounded-chip border border-rose-100 bg-rose-50/60 px-3 py-2 text-xs text-rose-700">
+        <ul className="kumbu-alert kumbu-alert-error flex-col items-start gap-1 text-xs">
           {unmappedFields.map(([field, msg]) => (
             <li key={field}>
               <span className="font-medium">{field}:</span> {msg}

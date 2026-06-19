@@ -8,8 +8,6 @@ import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
 import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 import type { LegalSection } from "@/lib/types";
 
-export type { ActionState };
-
 function parseSectionsJson(raw: string): LegalSection[] | null {
   try {
     const parsed = JSON.parse(raw) as unknown;

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { requireSuperAdmin } from "@/lib/auth";
 import { adminFetchItem } from "@/lib/admin-data";
+import { GrowthGatePanel } from "@/components/monetization/growth-gate-panel";
 import { PageHeader } from "@/components/ui/page-header";
 import { OrderStatusBadge } from "@/components/ui/status-badge";
 import { AccountStatusBadge } from "@/components/ui/account-status-badge";
@@ -55,6 +56,7 @@ type ControlOverview = {
     buyer_email: string | null;
     seller_email: string | null;
   }[];
+  growth_gate?: Record<string, unknown>;
 };
 
 const EMPTY_CONTROL: ControlOverview = {
@@ -94,6 +96,8 @@ export default async function ControlPage() {
         title="Controlo total"
         subtitle="Marketplace C2C: cada utilizador compra e vende. Moderação centralizada."
       />
+
+      {data.growth_gate ? <GrowthGatePanel gate={data.growth_gate} /> : null}
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
         <Stat label="Utilizadores activos" value={data.users.active} accent="text-kumbu-red" />

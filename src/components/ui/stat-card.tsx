@@ -29,7 +29,7 @@ export function StatCard({
           <p className="mt-2 text-3xl font-bold tracking-tight text-kumbu-ink">
             {typeof value === "number" ? formatNumber(value) : value}
           </p>
-          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+          {hint && <p className="mt-1 text-xs text-[var(--kumbu-ink-subtle)]">{hint}</p>}
         </div>
         {Icon && (
           <span

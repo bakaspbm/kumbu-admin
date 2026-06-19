@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     container: {
@@ -13,15 +14,15 @@ const config: Config = {
         kumbu: {
           red: "#C62828",
           "red-dark": "#B71C1C",
-          "red-soft": "#FFEBEE",
+          "red-soft": "var(--kumbu-red-soft)",
           purple: "#6A1B9A",
           blue: "#1A237E",
           navy: "#1E293B",
-          ink: "#0F172A",
+          ink: "var(--kumbu-ink)",
           chip: "#ECEFF1",
           delivery: "#2E7D32",
           badge: "#E53935",
-          bg: "#F5F5F5",
+          bg: "var(--kumbu-bg)",
         },
       },
       backgroundImage: {
@@ -36,8 +37,8 @@ const config: Config = {
         xl2: "20px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04)",
-        pop: "0 8px 28px rgba(15, 23, 42, 0.12)",
+        card: "var(--kumbu-shadow-card)",
+        pop: "var(--kumbu-shadow-pop)",
       },
       fontFamily: {
         sans: [

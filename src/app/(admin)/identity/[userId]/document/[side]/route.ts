@@ -1,13 +1,21 @@
-import { cookies } from "next/headers";
+import { requireAdmin } from "@/lib/auth";
+import { ensureAdminAccessToken } from "@/lib/kumbu-api/admin-session";
 import { getKumbuApiBaseUrl } from "@/lib/kumbu-api/server-client";
+import { NextResponse } from "next/server";
+
+const ALLOWED_SIDES = new Set(["front", "back", "selfie"]);
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ userId: string; side: string }> },
 ) {
+  await requireAdmin();
   const { userId, side } = await context.params;
-  const cookieStore = await cookies();
-  const token = cookieStore.get("kumbu_access_token")?.value;
+  if (!ALLOWED_SIDES.has(side)) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const token = await ensureAdminAccessToken();
   if (!token) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -27,7 +35,7 @@ export async function GET(
   return new Response(buffer, {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "private, max-age=300",
+      "Cache-Control": "no-store",
     },
   });
 }

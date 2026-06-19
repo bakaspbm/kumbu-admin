@@ -103,8 +103,13 @@ export default async function SupportInboxPage({
               {data.items.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <div className="text-sm font-medium">
-                      {row.user_name ?? row.user_email ?? row.user_id.slice(0, 8)}
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium">
+                      <span>{row.user_name ?? row.user_email ?? "Visitante"}</span>
+                      {row.guest ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                          Visitante
+                        </span>
+                      ) : null}
                     </div>
                     {row.user_email ? (
                       <div className="text-xs text-slate-500">{row.user_email}</div>

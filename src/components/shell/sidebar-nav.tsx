@@ -95,7 +95,7 @@ function NavSection({
 }) {
   return (
     <>
-      <p className="mb-2 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 first:mt-0">
+      <p className="mb-2 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--kumbu-ink-subtle)] first:mt-0">
         {title}
       </p>
       <ul className="space-y-0.5">
@@ -108,19 +108,15 @@ function NavSection({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={cn(
-                  "group flex items-center gap-3 rounded-chip px-3 py-2.5 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-kumbu-red-soft text-kumbu-red"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-kumbu-ink"
-                )}
+                data-active={active ? "true" : "false"}
+                className="group kumbu-nav-link"
               >
                 <Icon
                   className={cn(
-                    "h-4 w-4 shrink-0",
+                    "h-4 w-4 shrink-0 transition-colors",
                     active
                       ? "text-kumbu-red"
-                      : "text-slate-400 group-hover:text-slate-600"
+                      : "text-[var(--kumbu-ink-subtle)] group-hover:text-[var(--kumbu-ink-muted)]",
                   )}
                 />
                 <span className="flex-1">{item.label}</span>
@@ -143,6 +139,7 @@ export function SidebarNav({
   pendingIdentityCount = 0,
   pendingApplicationsCount = 0,
   pendingRentalsCount = 0,
+  monetizationGateReview = 0,
 }: {
   role?: AdminRole;
   pendingReportsCount?: number;
@@ -150,6 +147,7 @@ export function SidebarNav({
   pendingIdentityCount?: number;
   pendingApplicationsCount?: number;
   pendingRentalsCount?: number;
+  monetizationGateReview?: number;
 }) {
   const pathname = usePathname();
   const marketplaceNav = MARKETPLACE_NAV.map((item) => {
@@ -159,9 +157,11 @@ export function SidebarNav({
     if (item.href === "/rentals") return { ...item, badgeCount: pendingRentalsCount };
     return item;
   });
-  const platformNav = PLATFORM_NAV.map((item) =>
-    item.href === "/support/inbox" ? { ...item, badgeCount: waitingSupportCount } : item,
-  );
+  const platformNav = PLATFORM_NAV.map((item) => {
+    if (item.href === "/support/inbox") return { ...item, badgeCount: waitingSupportCount };
+    if (item.href === "/monetization") return { ...item, badgeCount: monetizationGateReview };
+    return item;
+  });
 
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -174,24 +174,22 @@ export function SidebarNav({
             {SUPER_NAV.map((item) => {
               const active = pathname.startsWith(item.href);
               const Icon = item.icon;
+              const badge = item.href === "/control" ? monetizationGateReview : 0;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={cn(
-                      "group flex items-center gap-3 rounded-chip px-3 py-2.5 text-sm font-medium transition-colors",
-                      active
-                        ? "bg-kumbu-red-soft text-kumbu-red"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-kumbu-ink"
-                    )}
+                    data-active={active ? "true" : "false"}
+                    className="kumbu-nav-link"
                   >
                     <Icon
                       className={cn(
                         "h-4 w-4 shrink-0",
-                        active ? "text-kumbu-red" : "text-slate-400"
+                        active ? "text-kumbu-red" : "text-[var(--kumbu-ink-subtle)]",
                       )}
                     />
-                    <span>{item.label}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {badge > 0 ? <NavBadge count={badge} /> : null}
                   </Link>
                 </li>
               );

@@ -19,11 +19,13 @@ export function MonetizationSettingsClient({ settings: initialSettings, provider
   const [settings, setSettings] = useState(asRecord(initialSettings));
   const [providers, setProviders] = useState(initialProviders.map(asRecord));
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function saveSettings() {
     setBusy(true);
-    setMessage(null);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       const updated = await updateMonetizationSettingsAction({
         paymentSlaHours: settings.payment_sla_hours,
@@ -31,9 +33,9 @@ export function MonetizationSettingsClient({ settings: initialSettings, provider
         supportEmail: settings.support_email,
       });
       setSettings(asRecord(updated));
-      setMessage("Definições guardadas.");
+      setSuccessMessage("Definições guardadas.");
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Erro ao guardar.");
+      setErrorMessage(e instanceof Error ? e.message : "Não foi possível guardar. Verifique os campos e tente novamente.");
     } finally {
       setBusy(false);
     }
@@ -42,6 +44,8 @@ export function MonetizationSettingsClient({ settings: initialSettings, provider
   async function saveProvider(provider: Record<string, unknown>) {
     const id = String(provider.id ?? "");
     setBusy(true);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       const updated = await updatePaymentProviderAction(id, {
         accountNumber: provider.account_number,
@@ -50,9 +54,9 @@ export function MonetizationSettingsClient({ settings: initialSettings, provider
         active: provider.active !== false,
       });
       setProviders((prev) => prev.map((p) => (String(p.id) === id ? asRecord(updated) : p)));
-      setMessage("Provedor actualizado.");
+      setSuccessMessage("Provedor actualizado.");
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Erro ao actualizar provedor.");
+      setErrorMessage(e instanceof Error ? e.message : "Não foi possível actualizar o provedor. Tente novamente.");
     } finally {
       setBusy(false);
     }
@@ -60,7 +64,8 @@ export function MonetizationSettingsClient({ settings: initialSettings, provider
 
   return (
     <div className="space-y-6">
-      {message && <p className="text-sm text-emerald-700">{message}</p>}
+      {successMessage ? <p className="text-sm text-emerald-700">{successMessage}</p> : null}
+      {errorMessage ? <p className="text-sm text-red-700">{errorMessage}</p> : null}
 
       <section className="kumbu-card p-5 space-y-3">
         <h2 className="text-lg font-bold">Empresa & SLA</h2>

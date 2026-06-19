@@ -11,6 +11,14 @@ export type IdentityVerificationItem = {
   documents_count: number;
 };
 
+export type IdentityDocumentReview = {
+  side: string;
+  uploaded_at: string;
+  review_status: "PENDING" | "APPROVED" | "REJECTED";
+  rejection_reason: string | null;
+  reviewed_at: string | null;
+};
+
 export type IdentityVerificationDetail = {
   user_id: string;
   user_name: string | null;
@@ -20,7 +28,7 @@ export type IdentityVerificationDetail = {
   admin_note: string | null;
   reviewed_at: string | null;
   created_at: string | null;
-  documents: { side: string; uploaded_at: string }[];
+  documents: IdentityDocumentReview[];
 };
 
 export const identityApi = {
@@ -57,6 +65,22 @@ export const identityApi = {
 
   reject(userId: string, note: string) {
     return kumbuApiFetch(`/admin/identity/users/${userId}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    }, { withAuth: true });
+  },
+
+  approveDocument(userId: string, side: string, note?: string) {
+    return kumbuApiFetch(`/admin/identity/users/${userId}/documents/${side}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note ?? "" }),
+    }, { withAuth: true });
+  },
+
+  rejectDocument(userId: string, side: string, note: string) {
+    return kumbuApiFetch(`/admin/identity/users/${userId}/documents/${side}/reject`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ note }),

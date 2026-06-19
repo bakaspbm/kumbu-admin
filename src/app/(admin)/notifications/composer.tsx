@@ -1,9 +1,11 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Send } from "lucide-react";
-import { sendNotificationAction, type ActionState } from "./actions";
+import { sendNotificationAction } from "./actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 
 function Submit() {

@@ -16,8 +16,6 @@ import {
   computeBannedUntil,
 } from "@/lib/user-ban";
 
-export type { ActionState };
-
 const VALID_DURATIONS = new Set<BanDurationKey>(
   BAN_DURATION_OPTIONS.map((o) => o.value),
 );
@@ -202,7 +200,7 @@ export async function unbanUserAction(
     revalidatePath("/control");
     return {
       ok: true,
-      message: "Ban removido. O utilizador pode voltar a usar a plataforma.",
+      message: "Suspensão cancelada. O utilizador pode voltar a usar a plataforma.",
     };
   } catch (e) {
     return toActionState(e);

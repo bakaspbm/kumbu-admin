@@ -41,6 +41,7 @@ export function AdminLayoutClient({
       pendingIdentityCount={queueCounts.pendingIdentity}
       pendingApplicationsCount={queueCounts.pendingApplications}
       pendingRentalsCount={queueCounts.pendingRentals}
+      monetizationGateReview={queueCounts.monetizationGateReview}
     >
       {children}
     </AdminShell>

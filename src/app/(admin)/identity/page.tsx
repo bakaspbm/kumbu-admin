@@ -89,12 +89,20 @@ export default async function IdentityPage({
                     {formatDateTime(row.created_at)}
                   </td>
                   <td>
-                    <Link
-                      href={`/identity/${row.user_id}`}
-                      className="text-sm font-semibold text-kumbu-red hover:underline"
-                    >
-                      Rever
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Link
+                        href={`/identity/${row.user_id}`}
+                        className="text-sm font-semibold text-kumbu-red hover:underline"
+                      >
+                        Rever
+                      </Link>
+                      <Link
+                        href={`/users/${row.user_id}`}
+                        className="text-xs text-slate-500 hover:text-kumbu-red hover:underline"
+                      >
+                        Perfil
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

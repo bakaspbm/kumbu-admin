@@ -7,8 +7,6 @@ import type { ActionState } from "@/lib/action-state";
 import { formDataNumber, formDataString, toActionState } from "@/lib/kumbu-api/errors";
 import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 
-export type { ActionState };
-
 export async function upsertCategoryAction(
   _prev: ActionState,
   formData: FormData,

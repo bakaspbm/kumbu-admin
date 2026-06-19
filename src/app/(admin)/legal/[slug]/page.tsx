@@ -36,7 +36,7 @@ export default async function LegalEditPage({
         </Link>
         <PageHeader title={doc.title} subtitle={`Slug: ${doc.slug}`} />
         {!data && (
-          <p className="rounded-chip border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="kumbu-panel-warning px-4 py-3 text-sm">
             Ainda não guardado na base de dados — a pré-visualização usa o texto por defeito.
             Guarde para publicar no site.
           </p>

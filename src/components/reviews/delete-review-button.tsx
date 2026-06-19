@@ -1,12 +1,13 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Trash2 } from "lucide-react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import {
   deleteProductReviewAction,
-  type ActionState,
 } from "@/app/(admin)/reviews/actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 

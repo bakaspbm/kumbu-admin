@@ -8,6 +8,7 @@ import {
   refreshMetricsAction,
   rejectPaymentAction,
 } from "./actions";
+import { GrowthGatePanel } from "@/components/monetization/growth-gate-panel";
 
 type Props = {
   overview: Record<string, unknown>;
@@ -21,19 +22,21 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 export function MonetizationOverview({ overview, gate, pendingPayments }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const settings = asRecord(overview.settings);
   const routine = asRecord(overview.routine);
   const metrics = asRecord(overview.key_metrics);
 
   async function run(action: () => Promise<unknown>, label: string) {
     setBusy(label);
-    setMessage(null);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       await action();
-      setMessage(`${label} concluído.`);
+      setSuccessMessage(`${label} concluído.`);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Erro ao executar acção.");
+      setErrorMessage(e instanceof Error ? e.message : "Não foi possível concluir esta acção. Tente novamente.");
     } finally {
       setBusy(null);
     }
@@ -41,6 +44,8 @@ export function MonetizationOverview({ overview, gate, pendingPayments }: Props)
 
   return (
     <div className="space-y-6">
+      <GrowthGatePanel gate={gate} />
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Cobrança activa" value={settings.charging_enabled ? "Sim" : "Não"} />
         <StatCard label="Gate pronto" value={gate.gate_ready ? "Sim" : "Não"} />
@@ -79,7 +84,12 @@ export function MonetizationOverview({ overview, gate, pendingPayments }: Props)
             Desactivar cobrança
           </button>
         </div>
-        {message && <p className="text-sm text-emerald-700">{message}</p>}
+        {successMessage ? (
+          <p className="text-sm text-emerald-700">{successMessage}</p>
+        ) : null}
+        {errorMessage ? (
+          <p className="text-sm text-red-700">{errorMessage}</p>
+        ) : null}
       </section>
 
       <section className="kumbu-card p-5">

@@ -5,6 +5,7 @@ import { adminGet, adminList } from "@/lib/admin-data";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProductForm } from "../product-form";
 import { DeleteProductButton } from "./delete-button";
+import { ProductImageGallery } from "@/components/products/product-image-gallery";
 import { ProductReviewsPanel } from "@/components/reviews/product-reviews-panel";
 import type {
   CatalogCategory,
@@ -48,6 +49,7 @@ export default async function ProductEditPage({
             </div>
           }
         />
+        <ProductImageGallery product={product} />
         <div className="kumbu-card p-5">
           <ProductForm
             mode="edit"

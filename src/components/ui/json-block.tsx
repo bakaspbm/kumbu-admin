@@ -13,9 +13,7 @@ export function JsonBlock({
   return (
     <div className="space-y-1.5">
       <p className="kumbu-label">{label}</p>
-      <pre className="max-h-48 overflow-auto rounded-chip border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-        {text}
-      </pre>
+      <pre className="kumbu-code-block">{text}</pre>
     </div>
   );
 }

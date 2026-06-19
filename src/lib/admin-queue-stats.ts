@@ -2,6 +2,7 @@ import { supportInboxApi } from "@/lib/kumbu-api/support-inbox";
 import { identityApi } from "@/lib/kumbu-api/identity";
 import { jobsApi } from "@/lib/kumbu-api/jobs";
 import { rentalsApi } from "@/lib/kumbu-api/rentals";
+import { monetizationApi } from "@/lib/kumbu-api/monetization";
 
 export type AdminQueueCounts = {
   pendingReports: number;
@@ -9,17 +10,21 @@ export type AdminQueueCounts = {
   pendingIdentity: number;
   pendingApplications: number;
   pendingRentals: number;
+  monetizationGateReview: number;
 };
 
 export async function getAdminQueueCounts(
   pendingReportsFallback = 0,
 ): Promise<AdminQueueCounts> {
-  const [support, identity, applications, rentals] = await Promise.all([
+  const [support, identity, applications, rentals, gate] = await Promise.all([
     supportInboxApi.waitingCount().catch(() => ({ count: 0 })),
     identityApi.pendingCount().catch(() => ({ count: 0 })),
     jobsApi.pendingApplicationsCount().catch(() => ({ count: 0 })),
     rentalsApi.pendingCount().catch(() => ({ count: 0 })),
+    monetizationApi.gate().catch(() => ({}) as Record<string, unknown>),
   ]);
+
+  const gateReview = gate.needs_superadmin_review === true ? 1 : 0;
 
   return {
     pendingReports: pendingReportsFallback,
@@ -27,5 +32,6 @@ export async function getAdminQueueCounts(
     pendingIdentity: identity.count ?? 0,
     pendingApplications: applications.count ?? 0,
     pendingRentals: rentals.count ?? 0,
+    monetizationGateReview: gateReview,
   };
 }

@@ -1,7 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { resolveAdminAction } from "@/lib/auth";
 import { monetizationApi } from "@/lib/kumbu-api/monetization";
+
+async function requireAdminGate() {
+  const gate = await resolveAdminAction();
+  if (!gate.ok) {
+    throw new Error(gate.error);
+  }
+}
 
 function revalidateMonetization() {
   revalidatePath("/monetization");
@@ -11,31 +19,37 @@ function revalidateMonetization() {
 }
 
 export async function refreshMetricsAction() {
+  await requireAdminGate();
   await monetizationApi.refreshMetrics();
   revalidateMonetization();
 }
 
 export async function enableChargingAction() {
+  await requireAdminGate();
   await monetizationApi.enableCharging();
   revalidateMonetization();
 }
 
 export async function disableChargingAction() {
+  await requireAdminGate();
   await monetizationApi.disableCharging();
   revalidateMonetization();
 }
 
 export async function confirmPaymentAction(paymentId: string, note?: string) {
+  await requireAdminGate();
   await monetizationApi.confirmPayment(paymentId, note);
   revalidateMonetization();
 }
 
 export async function rejectPaymentAction(paymentId: string, reason: string) {
+  await requireAdminGate();
   await monetizationApi.rejectPayment(paymentId, reason);
   revalidateMonetization();
 }
 
 export async function updateMonetizationSettingsAction(input: Record<string, unknown>) {
+  await requireAdminGate();
   const updated = await monetizationApi.updateSettings(input);
   revalidateMonetization();
   return updated;
@@ -45,6 +59,7 @@ export async function updatePaymentProviderAction(
   providerId: string,
   input: Record<string, unknown>,
 ) {
+  await requireAdminGate();
   const updated = await monetizationApi.updatePaymentProvider(providerId, input);
   revalidateMonetization();
   return updated;
@@ -54,6 +69,7 @@ export async function updateMonetizationProductAction(
   productId: string,
   input: Record<string, unknown>,
 ) {
+  await requireAdminGate();
   const updated = await monetizationApi.updateProduct(productId, input);
   revalidateMonetization();
   return updated;
@@ -63,6 +79,7 @@ export async function updateCategoryStrategyAction(
   categoryId: string,
   input: Record<string, unknown>,
 ) {
+  await requireAdminGate();
   await monetizationApi.updateCategoryStrategy(categoryId, input);
   const matrix = await monetizationApi.categoryMatrix();
   revalidateMonetization();

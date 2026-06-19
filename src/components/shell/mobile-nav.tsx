@@ -22,7 +22,7 @@ const NAV = [
 export function MobileNav() {
   const pathname = usePathname();
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-100 shadow-pop">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--kumbu-border)] bg-[var(--kumbu-surface)] shadow-pop lg:hidden">
       <ul className="grid grid-cols-5">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active =
@@ -33,7 +33,7 @@ export function MobileNav() {
                 href={href}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 py-2 text-[11px]",
-                  active ? "text-kumbu-red" : "text-slate-500"
+                  active ? "text-kumbu-red" : "text-[var(--kumbu-ink-subtle)]"
                 )}
               >
                 <Icon className="h-5 w-5" />

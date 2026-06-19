@@ -6,17 +6,30 @@ import { revalidatePath } from "next/cache";
 
 import { logAudit, requireAdmin } from "@/lib/auth";
 
-import { adminAction, adminDelete, adminPatch, adminUpsert } from "@/lib/admin-data";
+import { adminAction, adminDelete, adminList, adminPatch, adminUpsert } from "@/lib/admin-data";
 
 import type { ActionState } from "@/lib/action-state";
 
+import { KumbuApiError } from "@/lib/kumbu-api/server-client";
 import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+async function resolveUserId(raw: string): Promise<string | null> {
+  const value = raw.trim();
+  if (!value) return null;
+  if (UUID_RE.test(value)) return value;
 
-export type { ActionState };
-
-
+  const users = await adminList<{ id: string; email: string | null }>("users", {
+    q: value,
+    limit: 10,
+  });
+  const exact = users.find(
+    (user) => user.email?.trim().toLowerCase() === value.toLowerCase(),
+  );
+  return exact?.id ?? users[0]?.id ?? null;
+}
 
 export async function sendNotificationAction(
 
@@ -32,7 +45,7 @@ export async function sendNotificationAction(
 
     const audience = formDataString(formData, "audience") || "all";
 
-    const user_id = formDataString(formData, "user_id") || undefined;
+    const rawUserId = formDataString(formData, "user_id");
 
     const title = formDataString(formData, "title");
 
@@ -40,21 +53,31 @@ export async function sendNotificationAction(
 
     const icon_key = formDataString(formData, "icon_key") || "notifications_outlined";
 
+    if (!title || !body) {
+      return { ok: false, message: "Título e mensagem são obrigatórios." };
+    }
 
-
-    await adminUpsert("notifications", {
-
-      audience,
-
-      user_id: user_id ?? null,
-
+    const payload: Record<string, unknown> = {
       title,
-
       body,
-
       icon_key,
+    };
 
-    });
+    if (audience === "single" || audience === "user") {
+      const user_id = await resolveUserId(rawUserId);
+      if (!user_id) {
+        throw new KumbuApiError(
+          "Utilizador não encontrado. Indique o e-mail ou UID exacto.",
+          400,
+        );
+      }
+      payload.audience = "user";
+      payload.user_id = user_id;
+    } else {
+      payload.audience = "all";
+    }
+
+    await adminUpsert("notifications", payload);
 
     await logAudit({
 

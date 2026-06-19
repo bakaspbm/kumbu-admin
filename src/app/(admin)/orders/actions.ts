@@ -14,8 +14,6 @@ import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
 
 
 
-export type { ActionState };
-
 
 
 export async function updateOrderStatusAction(

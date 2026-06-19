@@ -1,12 +1,13 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import type { MarketplaceConversation } from "@/lib/types";
 import {
   blockConversationAction,
   unblockConversationAction,
-  type ActionState,
 } from "./actions";
 
 export function ConversationModerationPanel({

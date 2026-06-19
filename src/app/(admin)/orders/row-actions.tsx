@@ -1,11 +1,12 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState, useTransition } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import {
   updateOrderStatusAction,
   deleteOrderAction,
-  type ActionState,
 } from "./actions";
 import type { OrderStatus } from "@/lib/types";
 

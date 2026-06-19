@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Login em http://localhost:3000 com credenciais do bootstrap do backend.
+Login em http://localhost:3001 com credenciais do bootstrap do backend.
 
 ## 4. Site
 
@@ -36,6 +36,8 @@ cd Kumbu_site_user
 npm install
 npm run dev
 ```
+
+Site em http://localhost:3000
 
 ## 5. Checklist rápido
 

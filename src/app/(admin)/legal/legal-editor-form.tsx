@@ -1,9 +1,11 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import { FeedbackBanner } from "@/components/ui/toast";
-import { saveLegalDocumentAction, type ActionState } from "./actions";
+import { saveLegalDocumentAction } from "./actions";
 import type { LegalDocument } from "@/lib/types";
 
 export function LegalEditorForm({ doc }: { doc: LegalDocument }) {

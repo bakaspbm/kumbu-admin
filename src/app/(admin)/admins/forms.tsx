@@ -1,5 +1,7 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Save, Trash2, UserPlus } from "lucide-react";
@@ -7,7 +9,6 @@ import {
   changeRoleAction,
   removeAdminAction,
   inviteAdminAction,
-  type ActionState,
 } from "./actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 import type { AdminUserRow } from "@/lib/types";

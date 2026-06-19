@@ -6,8 +6,6 @@ import type { ActionState } from "@/lib/action-state";
 import { toActionState } from "@/lib/kumbu-api/errors";
 import { jobsApi } from "@/lib/kumbu-api/jobs";
 
-export type { ActionState };
-
 export async function updateJobListingStatusAction(
   _prev: ActionState,
   formData: FormData,

@@ -1,6 +1,17 @@
 import { KumbuApiError } from "@/lib/kumbu-api/api-error";
 import type { ActionState } from "@/lib/action-state";
 
+const TECHNICAL_PATTERN =
+  /sql|hibernate|jdbc|flyway|stacktrace|org\.spring|com\.kumbu|java\.|internal server error/i;
+
+function sanitizeMessage(message: string): string {
+  const trimmed = message.trim();
+  if (!trimmed || TECHNICAL_PATTERN.test(trimmed)) {
+    return "Ocorreu um erro. Verifique os dados e tente novamente.";
+  }
+  return trimmed;
+}
+
 /** Java Bean Validation property names → form field names (snake_case). */
 export function backendFieldToFormName(field: string): string {
   if (field.includes("_")) return field;
@@ -26,12 +37,12 @@ export function toActionState(error: unknown): ActionState {
   if (isKumbuApiError(error)) {
     return {
       ok: false,
-      message: error.message,
+      message: sanitizeMessage(error.message),
       fields: mapBackendFieldsToForm(error.fields),
     };
   }
   if (error instanceof Error) {
-    return { ok: false, message: error.message };
+    return { ok: false, message: sanitizeMessage(error.message) };
   }
   return { ok: false, message: "Ocorreu um erro. Tente novamente." };
 }

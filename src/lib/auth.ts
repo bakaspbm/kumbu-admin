@@ -56,24 +56,25 @@ export async function getOptionalAdmin(): Promise<AdminSession | null> {
 }
 
 export async function resolveAdminAction(): Promise<
-  { session: AdminSession } | { error: string }
+  { ok: true; session: AdminSession } | { ok: false; error: string }
 > {
   const session = await getOptionalAdmin();
   if (!session) {
     return {
+      ok: false,
       error: "Sessão expirada ou sem permissão. Entra novamente no painel.",
     };
   }
-  return { session };
+  return { ok: true, session };
 }
 
 export async function resolveSuperAdminAction(): Promise<
-  { session: AdminSession } | { error: string }
+  { ok: true; session: AdminSession } | { ok: false; error: string }
 > {
   const auth = await resolveAdminAction();
-  if ("error" in auth) return auth;
+  if (!auth.ok) return auth;
   if (auth.session.role !== "super_admin") {
-    return { error: "Apenas super admins podem executar esta acção." };
+    return { ok: false, error: "Apenas super admins podem executar esta acção." };
   }
   return auth;
 }

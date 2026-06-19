@@ -1,10 +1,11 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import {
   deleteJobListingAction,
   updateJobListingStatusAction,
-  type ActionState,
 } from "./actions";
 
 function ActionMessage({ state }: { state: ActionState }) {

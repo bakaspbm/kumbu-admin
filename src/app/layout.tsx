@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ThemeScript } from "@/components/theme/theme-script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#C62828",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#C62828" },
+    { media: "(prefers-color-scheme: dark)", color: "#080b10" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -18,11 +23,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body
         className="min-h-screen bg-kumbu-bg text-kumbu-ink antialiased"
         suppressHydrationWarning
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

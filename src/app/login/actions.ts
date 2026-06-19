@@ -1,7 +1,8 @@
 "use server";
 
+import { sanitizeInternalPath } from "@/lib/auth/safe-redirect";
 import { redirect } from "next/navigation";
-import { loginWithKumbuApi, clearKumbuApiAuthCookies } from "@/lib/kumbu-api/auth";
+import { loginWithKumbuApi, logoutFromKumbuApi, clearKumbuApiAuthCookies } from "@/lib/kumbu-api/auth";
 import { toLoginError } from "@/lib/kumbu-api/errors";
 import type { BootstrapState, LoginState } from "@/lib/action-state";
 
@@ -27,7 +28,7 @@ export async function loginAction(
       };
     }
 
-    const redirectTo = next.startsWith("/") ? next : "/dashboard";
+    const redirectTo = sanitizeInternalPath(next, "/dashboard");
     return { success: true, redirectTo };
   } catch (e) {
     return toLoginError(e);
@@ -35,7 +36,7 @@ export async function loginAction(
 }
 
 export async function logoutAction() {
-  await clearKumbuApiAuthCookies();
+  await logoutFromKumbuApi();
   redirect("/login");
 }
 

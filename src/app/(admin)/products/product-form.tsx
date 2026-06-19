@@ -1,5 +1,7 @@
 "use client";
 
+
+import type { ActionState } from "@/lib/action-state";
 import { useActionState } from "react";
 import { useRouterRefreshOnActions } from "@/hooks/use-router-refresh-on-actions";
 import { useFormStatus } from "react-dom";
@@ -7,7 +9,6 @@ import { Loader2, Save } from "lucide-react";
 import {
   createProductAction,
   updateProductAction,
-  type ActionState,
 } from "./actions";
 import { FeedbackBanner } from "@/components/ui/toast";
 import type { CatalogCategory, CatalogProduct, CatalogSubcategory } from "@/lib/types";
