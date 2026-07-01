@@ -49,9 +49,14 @@ export async function kumbuApiFetchBase<T>(
     throw new KumbuApiError(message, response.status, body?.code, body?.fields);
   }
 
-  if (response.status === 204) {
+  if (response.status === 204 || response.status === 205) {
     return undefined as unknown as T;
   }
 
-  return (await response.json()) as T;
+  const text = await response.text();
+  if (!text.trim()) {
+    return undefined as unknown as T;
+  }
+
+  return JSON.parse(text) as T;
 }
