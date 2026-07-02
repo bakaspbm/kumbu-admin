@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 
 import { NotificationComposer } from "./composer";
 
-import { NotificationList } from "./notification-list";
+import { NotificationListLive } from "./notification-list-live";
 
 import type { UserNotification } from "@/lib/types";
 
@@ -114,7 +114,7 @@ export default async function NotificationsPage({
 
         </p>
 
-        <NotificationList items={items} />
+        <NotificationListLive initialItems={items} showHidden={showHidden} />
 
       </div>
 

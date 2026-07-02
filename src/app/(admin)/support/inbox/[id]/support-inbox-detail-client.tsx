@@ -87,6 +87,50 @@ export function SupportInboxDetailClient({
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
+    let alive = true;
+
+    function mergeIncoming(incoming: SupportMessageItem[]) {
+      setMessages((prev) => {
+        if (incoming.length === 0) return prev;
+        const ids = new Set(prev.map((m) => m.id));
+        const next = [...prev];
+        for (const msg of incoming) {
+          if (!ids.has(msg.id)) next.push(msg);
+        }
+        next.sort((a, b) => a.created_at.localeCompare(b.created_at));
+        return next;
+      });
+    }
+
+    async function poll() {
+      try {
+        const response = await fetch(
+          `/api/kumbu/admin/support/conversations/${conversation.id}`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+          },
+        );
+        if (!response.ok) return;
+        const payload = (await response.json()) as { messages?: SupportMessageItem[] };
+        if (!alive) return;
+        if (Array.isArray(payload.messages)) mergeIncoming(payload.messages);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const id = window.setInterval(() => void poll(), 4_000);
+    void poll();
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [conversation.id]);
+
+  useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
