@@ -17,7 +17,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/public") ||
-    pathname.startsWith("/api/auth/refresh") ||
+    pathname.startsWith("/api/auth/") ||
     pathname === "/favicon.ico" ||
     pathname === "/forbidden"
   );
