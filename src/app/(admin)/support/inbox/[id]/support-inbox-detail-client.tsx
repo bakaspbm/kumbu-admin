@@ -11,11 +11,7 @@ import {
   replySupportConversationAction,
 } from "../actions";
 import { uploadSupportAttachmentAction } from "../upload-attachment-action";
-
-function attachmentLabel(url: string | null | undefined): string | null {
-  if (!url) return null;
-  return url.toLowerCase().includes(".pdf") ? "PDF" : "Imagem";
-}
+import { ChatAttachment } from "@/components/chat/chat-attachment";
 
 function messageSenderLabel(
   msg: SupportMessageItem,
@@ -64,16 +60,7 @@ function MessageBubble({
         </div>
 
         <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${bubbleClass}`}>
-          {msg.attachment_url ? (
-            <a
-              href={msg.attachment_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mb-2 inline-flex items-center gap-1 rounded-lg border border-[var(--kumbu-border)] bg-[var(--kumbu-surface)] px-2.5 py-1.5 text-xs font-semibold text-kumbu-red transition hover:opacity-90"
-            >
-              {attachmentLabel(msg.attachment_url)} — abrir ficheiro
-            </a>
-          ) : null}
+          {msg.attachment_url ? <ChatAttachment url={msg.attachment_url} /> : null}
 
           {hasBody ? (
             <p className="whitespace-pre-wrap break-words">{msg.body}</p>

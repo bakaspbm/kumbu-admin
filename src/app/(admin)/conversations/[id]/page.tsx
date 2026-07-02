@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/utils";
 import type { MarketplaceConversation } from "@/lib/types";
 import { ConversationModerationPanel } from "../moderation-panel";
 import { MessageModerationButton } from "../message-actions";
+import { ChatAttachment } from "@/components/chat/chat-attachment";
 
 export const dynamic = "force-dynamic";
 
@@ -135,7 +136,14 @@ export default async function ConversationDetailPage({
                         {formatDateTime(msg.created_at)}
                       </span>
                     </div>
-                    <p className="whitespace-pre-wrap text-sm text-slate-800">{msg.body}</p>
+                    <p className="whitespace-pre-wrap text-sm text-slate-800">
+                      {msg.body && msg.body !== "📎 Ficheiro partilhado" ? msg.body : null}
+                    </p>
+                    {msg.attachment_url ? (
+                      <div className="mt-2">
+                        <ChatAttachment url={msg.attachment_url} />
+                      </div>
+                    ) : null}
                     {hidden && (
                       <p className="mt-1 text-xs text-amber-700">
                         Oculta na app (admin) · {formatDateTime(msg.hidden_at!)}

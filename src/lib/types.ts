@@ -176,6 +176,7 @@ export interface ChatMessage {
   created_at: string;
   read_at: string | null;
   hidden_at: string | null;
+  attachment_url?: string | null;
 }
 
 export type ContentReportStatus = "pending" | "reviewing" | "resolved" | "dismissed";
