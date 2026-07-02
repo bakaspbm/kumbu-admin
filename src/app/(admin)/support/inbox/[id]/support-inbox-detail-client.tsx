@@ -12,6 +12,7 @@ import {
 } from "../actions";
 import { uploadSupportAttachmentAction } from "../upload-attachment-action";
 import { ChatAttachment } from "@/components/chat/chat-attachment";
+import { subscribeSupportConversationTopic } from "@/lib/kumbu-api/admin-realtime";
 
 function messageSenderLabel(
   msg: SupportMessageItem,
@@ -87,8 +88,6 @@ export function SupportInboxDetailClient({
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    let alive = true;
-
     function mergeIncoming(incoming: SupportMessageItem[]) {
       setMessages((prev) => {
         if (incoming.length === 0) return prev;
@@ -102,31 +101,31 @@ export function SupportInboxDetailClient({
       });
     }
 
-    async function poll() {
-      try {
-        const response = await fetch(
-          `/api/kumbu/admin/support/conversations/${conversation.id}`,
-          {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-            headers: { Accept: "application/json" },
-          },
-        );
-        if (!response.ok) return;
-        const payload = (await response.json()) as { messages?: SupportMessageItem[] };
-        if (!alive) return;
-        if (Array.isArray(payload.messages)) mergeIncoming(payload.messages);
-      } catch {
-        /* ignore */
-      }
-    }
+    const unsub = subscribeSupportConversationTopic(conversation.id, (raw) => {
+      // backend envia ChatMessageResponse; o admin usa SupportMessageItem shape
+      if (!raw || typeof raw !== "object") return;
+      const row = raw as Record<string, unknown>;
+      const id = String(row.id ?? "");
+      if (!id) return;
+      const msg: SupportMessageItem = {
+        id,
+        sender_id: String(row.senderId ?? row.sender_id ?? ""),
+        body: String(row.body ?? ""),
+        message_kind: String(row.messageKind ?? row.message_kind ?? "text"),
+        attachment_url: (row.attachmentUrl as string | null | undefined) ??
+          (row.attachment_url as string | null | undefined) ??
+          null,
+        created_at: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
+        from_support: Boolean(row.fromSupport ?? row.from_support),
+        admin_actor_id: (row.admin_actor_id as string | null | undefined) ??
+          (row.hiddenBy as string | null | undefined) ??
+          null,
+      };
+      mergeIncoming([msg]);
+    });
 
-    const id = window.setInterval(() => void poll(), 4_000);
-    void poll();
     return () => {
-      alive = false;
-      window.clearInterval(id);
+      unsub();
     };
   }, [conversation.id]);
 
