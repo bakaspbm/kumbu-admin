@@ -42,6 +42,9 @@ export function toActionState(error: unknown): ActionState {
     };
   }
   if (error instanceof Error) {
+    if (/unexpected end of json input|json\.parse|invalid json/i.test(error.message)) {
+      return { ok: false, message: "Resposta inválida do servidor. Tente novamente." };
+    }
     return { ok: false, message: sanitizeMessage(error.message) };
   }
   return { ok: false, message: "Ocorreu um erro. Tente novamente." };

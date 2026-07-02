@@ -12,6 +12,25 @@ export type KumbuFetchOptions = {
   accessToken?: string | null;
 };
 
+function parseJsonBody(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    throw new KumbuApiError("Resposta inválida do servidor.", 502);
+  }
+}
+
+function parseErrorBody(text: string): ApiErrorBody | null {
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as ApiErrorBody;
+  } catch {
+    return null;
+  }
+}
+
 /** Fetch base — sem next/headers; seguro para importar em qualquer bundle. */
 export async function kumbuApiFetchBase<T>(
   path: string,
@@ -36,27 +55,19 @@ export async function kumbuApiFetchBase<T>(
     cache: "no-store",
   });
 
+  const text = await response.text();
+
   if (!response.ok) {
-    let body: ApiErrorBody | null = null;
-    try {
-      body = (await response.json()) as ApiErrorBody;
-    } catch {
-      body = null;
-    }
+    const body = parseErrorBody(text);
     const message =
       body?.message ||
       `Kumbu API request failed (${response.status}) for ${path}.`;
     throw new KumbuApiError(message, response.status, body?.code, body?.fields);
   }
 
-  if (response.status === 204 || response.status === 205) {
+  if (response.status === 204 || response.status === 205 || !text.trim()) {
     return undefined as unknown as T;
   }
 
-  const text = await response.text();
-  if (!text.trim()) {
-    return undefined as unknown as T;
-  }
-
-  return JSON.parse(text) as T;
+  return parseJsonBody(text) as T;
 }
