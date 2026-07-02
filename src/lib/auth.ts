@@ -5,6 +5,7 @@ import {
   ensureAdminAccessToken,
   kumbuApiFetch,
 } from "@/lib/kumbu-api/server-client";
+import { clearAdminAuthCookies } from "@/lib/kumbu-api/admin-session";
 
 export type AdminRole = "super_admin" | "admin" | "support";
 
@@ -22,7 +23,10 @@ export async function requireSuperAdmin(): Promise<AdminSession> {
 
 export async function requireAdmin(): Promise<AdminSession> {
   const token = await ensureAdminAccessToken();
-  if (!token) redirect("/login");
+  if (!token) {
+    await clearAdminAuthCookies();
+    redirect("/login");
+  }
 
   try {
     const me = await adminMe();
@@ -33,9 +37,13 @@ export async function requireAdmin(): Promise<AdminSession> {
     };
   } catch (error) {
     if (error instanceof KumbuApiError) {
-      if (error.status === 401) redirect("/login");
+      if (error.status === 401) {
+        await clearAdminAuthCookies();
+        redirect("/login");
+      }
       if (error.status === 403) redirect("/forbidden");
     }
+    await clearAdminAuthCookies();
     redirect("/login");
   }
 }

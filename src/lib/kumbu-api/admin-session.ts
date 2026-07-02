@@ -16,6 +16,25 @@ type RefreshResponse = {
   expiresInSeconds: number;
 };
 
+export async function clearAdminAuthCookies(): Promise<void> {
+  const cookieStore = await cookies();
+  const secure = process.env.NODE_ENV === "production";
+  cookieStore.set(ADMIN_ACCESS_COOKIE, "", {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  cookieStore.set(ADMIN_REFRESH_COOKIE, "", {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
 function decodeTokenExp(token: string): number | null {
   try {
     const payloadPart = token.split(".")[1];
@@ -80,12 +99,14 @@ export async function refreshAdminAccessToken(): Promise<string | null> {
       );
 
       if (!response.accessToken?.trim() || !response.refreshToken?.trim()) {
+        await clearAdminAuthCookies();
         return null;
       }
 
       await persistAdminTokens(response.accessToken, response.refreshToken);
       return response.accessToken;
     } catch {
+      await clearAdminAuthCookies();
       return null;
     } finally {
       refreshInFlight = null;
@@ -101,5 +122,9 @@ export async function ensureAdminAccessToken(): Promise<string | null> {
   if (current && !isTokenExpiredOrExpiringSoon(current)) {
     return current;
   }
-  return refreshAdminAccessToken();
+  const refreshed = await refreshAdminAccessToken();
+  if (!refreshed) {
+    await clearAdminAuthCookies();
+  }
+  return refreshed;
 }
