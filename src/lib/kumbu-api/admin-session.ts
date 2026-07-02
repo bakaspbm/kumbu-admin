@@ -5,10 +5,10 @@ import { kumbuApiFetchBase } from "@/lib/kumbu-api/fetch";
 import {
   ADMIN_ACCESS_COOKIE,
   ADMIN_REFRESH_COOKIE,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/kumbu-api/session-cookies";
 
-const REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
-const REFRESH_BUFFER_SECONDS = 5 * 60;
+const REFRESH_BUFFER_SECONDS = 10 * 60;
 
 type RefreshResponse = {
   accessToken: string;
@@ -39,11 +39,7 @@ function isTokenExpiredOrExpiringSoon(token: string | null): boolean {
   return exp <= nowSec + REFRESH_BUFFER_SECONDS;
 }
 
-async function persistAdminTokens(
-  accessToken: string,
-  refreshToken: string,
-  expiresInSeconds: number,
-) {
+async function persistAdminTokens(accessToken: string, refreshToken: string) {
   const cookieStore = await cookies();
   const secure = process.env.NODE_ENV === "production";
   cookieStore.set(ADMIN_ACCESS_COOKIE, accessToken, {
@@ -51,14 +47,14 @@ async function persistAdminTokens(
     secure,
     sameSite: "lax",
     path: "/",
-    maxAge: Math.max(expiresInSeconds, 1),
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
   cookieStore.set(ADMIN_REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
     secure,
     sameSite: "lax",
     path: "/",
-    maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS,
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
 }
 
@@ -87,11 +83,7 @@ export async function refreshAdminAccessToken(): Promise<string | null> {
         return null;
       }
 
-      await persistAdminTokens(
-        response.accessToken,
-        response.refreshToken,
-        response.expiresInSeconds ?? 3600,
-      );
+      await persistAdminTokens(response.accessToken, response.refreshToken);
       return response.accessToken;
     } catch {
       return null;

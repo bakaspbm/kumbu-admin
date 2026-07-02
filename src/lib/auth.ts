@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { adminMe } from "@/lib/kumbu-api/admin";
 import {
   KumbuApiError,
-  getKumbuAccessToken,
+  ensureAdminAccessToken,
   kumbuApiFetch,
 } from "@/lib/kumbu-api/server-client";
 
@@ -21,7 +21,7 @@ export async function requireSuperAdmin(): Promise<AdminSession> {
 }
 
 export async function requireAdmin(): Promise<AdminSession> {
-  const token = await getKumbuAccessToken();
+  const token = await ensureAdminAccessToken();
   if (!token) redirect("/login");
 
   try {
@@ -42,7 +42,7 @@ export async function requireAdmin(): Promise<AdminSession> {
 
 export async function getOptionalAdmin(): Promise<AdminSession | null> {
   try {
-    const token = await getKumbuAccessToken();
+    const token = await ensureAdminAccessToken();
     if (!token) return null;
     const me = await adminMe();
     return {

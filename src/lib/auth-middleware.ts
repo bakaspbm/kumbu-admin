@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ADMIN_ACCESS_COOKIE } from "@/lib/kumbu-api/session-cookies";
+import {
+  ADMIN_ACCESS_COOKIE,
+  ADMIN_REFRESH_COOKIE,
+} from "@/lib/kumbu-api/session-cookies";
 
 function isServerActionRequest(request: NextRequest) {
   return (
@@ -14,25 +17,33 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/public") ||
+    pathname.startsWith("/api/auth/refresh") ||
     pathname === "/favicon.ico" ||
     pathname === "/forbidden"
   );
 }
 
-/** Protege rotas privadas com o cookie de sessão admin (separado do site). */
+function hasAdminSession(request: NextRequest): boolean {
+  return Boolean(
+    request.cookies.get(ADMIN_ACCESS_COOKIE)?.value ||
+      request.cookies.get(ADMIN_REFRESH_COOKIE)?.value,
+  );
+}
+
+/** Protege rotas privadas com cookies de sessão admin (separado do site). */
 export function handleAdminAuth(request: NextRequest) {
-  const token = request.cookies.get(ADMIN_ACCESS_COOKIE)?.value;
+  const hasSession = hasAdminSession(request);
   const pathname = request.nextUrl.pathname;
   const isPublic = isPublicPath(pathname);
 
-  if (!token && !isPublic && !isServerActionRequest(request)) {
+  if (!hasSession && !isPublic && !isServerActionRequest(request)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (token && pathname === "/login" && request.method === "GET") {
+  if (hasSession && pathname === "/login" && request.method === "GET") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

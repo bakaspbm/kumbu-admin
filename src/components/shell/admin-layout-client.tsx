@@ -26,11 +26,43 @@ export function AdminLayoutClient({
   const router = useRouter();
 
   useEffect(() => {
+    let refreshInFlight: Promise<boolean> | null = null;
+
+    async function keepSessionAlive(): Promise<boolean> {
+      if (refreshInFlight) return refreshInFlight;
+      refreshInFlight = (async () => {
+        try {
+          const response = await fetch("/api/auth/refresh", {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+          });
+          return response.ok;
+        } catch {
+          return false;
+        } finally {
+          refreshInFlight = null;
+        }
+      })();
+      return refreshInFlight;
+    }
+
+    const interval = window.setInterval(() => {
+      void keepSessionAlive();
+    }, 10 * 60 * 1000);
+
     const onVisible = () => {
-      if (document.visibilityState === "visible") router.refresh();
+      if (document.visibilityState !== "visible") return;
+      void keepSessionAlive().then((ok) => {
+        if (ok) router.refresh();
+      });
     };
+
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [router]);
 
   return (

@@ -3,9 +3,8 @@ import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 import {
   ADMIN_ACCESS_COOKIE,
   ADMIN_REFRESH_COOKIE,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/kumbu-api/session-cookies";
-
-const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 type LoginResponse = {
   accessToken: string;
@@ -39,14 +38,14 @@ export async function loginWithKumbuApi(input: {
     secure,
     sameSite: "lax",
     path: "/",
-    maxAge: Math.max(response.expiresInSeconds ?? 0, 1),
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
   cookieStore.set(ADMIN_REFRESH_COOKIE, response.refreshToken, {
     httpOnly: true,
     secure,
     sameSite: "lax",
     path: "/",
-    maxAge: COOKIE_MAX_AGE_SECONDS,
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
 
   return response;
