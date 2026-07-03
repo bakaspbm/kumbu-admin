@@ -2,6 +2,11 @@ import { env } from "@/lib/env";
 
 const SECURE_CHAT_FILE_PATH = /\/api\/v1\/files\/chat\/(.+)$/;
 
+/** Documentos KYC — proxy Next com token admin (cookies HttpOnly). */
+export function toBrowserIdentityDocumentUrl(userId: string, side: string): string {
+  return `/api/kumbu/admin/identity/users/${encodeURIComponent(userId)}/documents/${encodeURIComponent(side)}`;
+}
+
 /** Anexos de chat exigem sessão — no browser usam o proxy Next (cookies HttpOnly). */
 export function toBrowserSecureFileUrl(url: string | null | undefined): string | null {
   if (!url?.trim()) return null;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, ExternalLink, ShieldCheck } from "lucide-react";
 import type { IdentityVerificationDetail } from "@/lib/kumbu-api/identity";
 import { VerifiedUserForm } from "@/app/(admin)/users/[id]/forms";
+import { IdentityDocumentImage } from "@/components/identity/identity-document-image";
 import { formatDateTime } from "@/lib/utils";
 import {
   IDENTITY_DOC_SIDE_LABEL,
@@ -123,11 +124,12 @@ export function UserClientTrustPanel({
                     >
                       <div className="flex min-w-[4.5rem] items-center gap-2">
                         {uploaded ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={`/identity/${userId}/document/${side}`}
+                          <IdentityDocumentImage
+                            userId={userId}
+                            side={side}
                             alt={IDENTITY_DOC_SIDE_LABEL[side]}
                             className="h-10 w-10 rounded-md border border-slate-200 object-cover"
+                            fallbackClassName="h-10 w-10"
                           />
                         ) : (
                           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-[10px] text-slate-400">

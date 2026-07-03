@@ -1,4 +1,4 @@
-import { kumbuApiFetch, getKumbuApiBaseUrl, getKumbuAccessToken } from "@/lib/kumbu-api/server-client";
+import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 
 export type IdentityVerificationItem = {
   id: string;
@@ -85,11 +85,5 @@ export const identityApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ note }),
     }, { withAuth: true });
-  },
-
-  async documentUrl(userId: string, side: string): Promise<string | null> {
-    const token = await getKumbuAccessToken();
-    if (!token) return null;
-    return `${getKumbuApiBaseUrl()}/admin/identity/users/${userId}/documents/${side}`;
   },
 };

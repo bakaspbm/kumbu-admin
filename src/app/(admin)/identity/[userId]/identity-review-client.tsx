@@ -9,6 +9,8 @@ import type {
   IdentityVerificationDetail,
 } from "@/lib/kumbu-api/identity";
 import { formatDateTime } from "@/lib/utils";
+import { toBrowserIdentityDocumentUrl } from "@/lib/asset-url";
+import { IdentityDocumentImage } from "@/components/identity/identity-document-image";
 import {
   approveIdentityAction,
   approveIdentityDocumentAction,
@@ -94,7 +96,7 @@ function DocumentCard({
 
   const uploaded = Boolean(doc);
   const status = doc?.review_status ?? "PENDING";
-  const imageSrc = `/identity/${userId}/document/${side}`;
+  const imageSrc = toBrowserIdentityDocumentUrl(userId, side);
 
   function rejectNote() {
     return (localNote.trim() || globalNote.trim()).trim();
@@ -148,11 +150,12 @@ function DocumentCard({
           onClick={() => setLightbox(true)}
           title="Ampliar imagem"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc}
+          <IdentityDocumentImage
+            userId={userId}
+            side={side}
             alt={SIDE_LABEL[side]}
             className="aspect-[3/4] w-full object-cover transition group-hover:scale-[1.02]"
+            fallbackClassName="aspect-[3/4] w-full"
           />
           <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white">
             <Maximize2 className="h-3 w-3" />
