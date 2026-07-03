@@ -116,6 +116,7 @@ export function UserClientTrustPanel({
                 {DOC_SIDES.map((side) => {
                   const doc = docsBySide.get(side);
                   const uploaded = Boolean(doc);
+                  const fileAvailable = doc?.file_available !== false;
                   const reviewStatus = doc?.review_status ?? "PENDING";
                   return (
                     <li
@@ -128,6 +129,7 @@ export function UserClientTrustPanel({
                             userId={userId}
                             side={side}
                             alt={IDENTITY_DOC_SIDE_LABEL[side]}
+                            fileAvailable={fileAvailable}
                             className="h-10 w-10 rounded-md border border-slate-200 object-cover"
                             fallbackClassName="h-10 w-10"
                           />

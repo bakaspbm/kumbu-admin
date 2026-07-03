@@ -17,6 +17,7 @@ export type IdentityDocumentReview = {
   review_status: "PENDING" | "APPROVED" | "REJECTED";
   rejection_reason: string | null;
   reviewed_at: string | null;
+  file_available?: boolean;
 };
 
 export type IdentityVerificationDetail = {

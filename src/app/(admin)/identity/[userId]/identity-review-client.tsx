@@ -95,6 +95,7 @@ function DocumentCard({
   const [pending, startTransition] = useTransition();
 
   const uploaded = Boolean(doc);
+  const fileAvailable = doc?.file_available !== false;
   const status = doc?.review_status ?? "PENDING";
   const imageSrc = toBrowserIdentityDocumentUrl(userId, side);
 
@@ -144,6 +145,7 @@ function DocumentCard({
       </div>
 
       {uploaded ? (
+        fileAvailable ? (
         <button
           type="button"
           className="group relative block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
@@ -154,6 +156,7 @@ function DocumentCard({
             userId={userId}
             side={side}
             alt={SIDE_LABEL[side]}
+            fileAvailable={fileAvailable}
             className="aspect-[3/4] w-full object-cover transition group-hover:scale-[1.02]"
             fallbackClassName="aspect-[3/4] w-full"
           />
@@ -162,6 +165,16 @@ function DocumentCard({
             Ampliar
           </span>
         </button>
+        ) : (
+        <IdentityDocumentImage
+          userId={userId}
+          side={side}
+          alt={SIDE_LABEL[side]}
+          fileAvailable={false}
+          className="aspect-[3/4] w-full object-cover"
+          fallbackClassName="aspect-[3/4] w-full min-h-[12rem]"
+        />
+        )
       ) : (
         <div className="flex aspect-[3/4] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-400">
           Não enviado
@@ -233,6 +246,8 @@ export function IdentityReviewClient({ detail }: { detail: IdentityVerificationD
     return map;
   }, [detail.documents]);
 
+  const missingFiles = detail.documents.some((doc) => doc.file_available === false);
+
   function refresh() {
     router.refresh();
   }
@@ -268,6 +283,17 @@ export function IdentityReviewClient({ detail }: { detail: IdentityVerificationD
         <ArrowLeft className="h-4 w-4" />
         Voltar à fila
       </Link>
+
+      {missingFiles ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">Ficheiros ausentes no servidor</p>
+          <p className="mt-1 text-amber-800">
+            Os metadados existem na base de dados, mas as fotos foram perdidas (redeploy sem
+            volume persistente). Peça ao utilizador que reenvie frente, verso e selfie em{" "}
+            <strong>Conta → Definições → Identidade</strong>.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="kumbu-card space-y-3 p-5 lg:col-span-1">
