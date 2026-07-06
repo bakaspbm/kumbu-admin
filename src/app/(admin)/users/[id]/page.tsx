@@ -39,6 +39,7 @@ import {
   DeleteUserForm,
   ExportUserButton,
   PasswordResetForm,
+  EmailVerificationPanel,
   PromoteAdminForm,
   RestoreUserForm,
   UpdateUserForm,
@@ -176,6 +177,22 @@ export default async function UserDetailPage({
           </div>
           <dl className="mt-5 space-y-3 text-sm">
             <Row icon={Mail} label="E-mail" value={user.email ?? "—"} />
+            <div className="flex flex-wrap items-center gap-2 pl-11">
+              <span
+                className={`kumbu-badge text-[10px] ${
+                  user.email_verified
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-amber-100 text-amber-800"
+                }`}
+              >
+                {user.email_verified ? "E-mail confirmado" : "E-mail por confirmar"}
+              </span>
+              {user.phone_verified ? (
+                <span className="kumbu-badge bg-emerald-50 text-emerald-700 text-[10px]">
+                  Telefone confirmado
+                </span>
+              ) : null}
+            </div>
             <Row icon={Phone} label="Telefone" value={user.phone || "—"} />
             <div className="flex flex-wrap gap-2 pt-1">
               <div>
@@ -312,6 +329,11 @@ export default async function UserDetailPage({
             {!user.deleted_at && (
               <>
                 <UserBanPanel id={user.id} user={user} />
+                <EmailVerificationPanel
+                  id={user.id}
+                  email={user.email}
+                  emailVerified={user.email_verified}
+                />
                 <PasswordResetForm email={user.email} />
                 <PromoteAdminForm
                   id={user.id}

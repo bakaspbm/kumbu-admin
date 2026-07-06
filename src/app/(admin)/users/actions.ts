@@ -261,3 +261,42 @@ export async function sendPasswordResetAction(
     return toActionState(e);
   }
 }
+
+export async function sendEmailVerificationAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const auth = await resolveAdminAction();
+    if ("error" in auth) return { ok: false, message: auth.error };
+    const id = formDataString(formData, "id");
+    if (!id) return { ok: false, message: "ID em falta." };
+
+    const result = await kumbuApiFetch<{
+      message?: string;
+      email_action_link?: string;
+    }>(`/admin/users/${id}/resend-email-verification`, { method: "POST" }, { withAuth: true });
+
+    await logAudit({
+      action: "user.email_verification_sent",
+      entity: "users",
+      entityId: id,
+    });
+    revalidatePath("/users");
+    revalidatePath(`/users/${id}`);
+
+    const link = result.email_action_link?.trim();
+    if (link) {
+      return {
+        ok: true,
+        message: `${result.message ?? "Link gerado."} (dev) ${link}`,
+      };
+    }
+    return {
+      ok: true,
+      message: result.message ?? "Link de confirmação enviado por e-mail.",
+    };
+  } catch (e) {
+    return toActionState(e);
+  }
+}

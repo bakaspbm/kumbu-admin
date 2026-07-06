@@ -18,5 +18,12 @@ export const usersApi = {
   restore(id: string) {
     return resource.action<void>(id, "restore", {}, "POST");
   },
+  resendEmailVerification(id: string) {
+    return resource.action<{
+      message?: string;
+      email_verified?: boolean;
+      email_action_link?: string;
+    }>(id, "resend-email-verification", {}, "POST");
+  },
 };
 

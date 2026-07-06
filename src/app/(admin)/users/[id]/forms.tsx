@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Download,
   ShieldBan,
+  MailCheck,
 } from "lucide-react";
 import {
   updateUserAction,
@@ -24,6 +25,7 @@ import {
   promoteAdminAction,
   demoteAdminAction,
   sendPasswordResetAction,
+  sendEmailVerificationAction,
 } from "../actions";
 import {
   BAN_DURATION_OPTIONS,
@@ -160,6 +162,59 @@ export function PasswordResetForm({ email }: { email: string | null }) {
         Enviar reset de palavra-passe
       </Btn>
     </form>
+  );
+}
+
+export function EmailVerificationPanel({
+  id,
+  email,
+  emailVerified,
+}: {
+  id: string;
+  email: string | null;
+  emailVerified?: boolean;
+}) {
+  const [state, action] = useActionState<ActionState, FormData>(
+    sendEmailVerificationAction,
+    null,
+  );
+  const verified = emailVerified === true;
+
+  return (
+    <div className="space-y-2 rounded-chip border border-slate-100 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-sm font-semibold">Verificação de e-mail</p>
+        <span
+          className={`kumbu-badge text-[10px] ${
+            verified
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-amber-100 text-amber-800"
+          }`}
+        >
+          {verified ? "Confirmado" : "Por confirmar"}
+        </span>
+      </div>
+      <p className="text-xs text-slate-500">
+        {verified
+          ? "O utilizador já confirmou o endereço de e-mail da conta."
+          : email
+            ? "Envia um novo link de confirmação para o e-mail da conta."
+            : "Sem e-mail na conta — não é possível enviar confirmação."}
+      </p>
+      {!verified && email ? (
+        <form action={action} className="space-y-2">
+          <input type="hidden" name="id" value={id} />
+          <FeedbackBanner feedback={state} />
+          <Btn
+            icon={MailCheck}
+            pendingLabel="A enviar..."
+            className="kumbu-btn-ghost"
+          >
+            Enviar link de verificação
+          </Btn>
+        </form>
+      ) : null}
+    </div>
   );
 }
 

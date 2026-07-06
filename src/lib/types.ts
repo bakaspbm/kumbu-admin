@@ -36,6 +36,8 @@ export interface KumbuUser {
   favorites: unknown;
   delivery_address: Record<string, unknown> | null;
   seller_verified?: boolean;
+  email_verified?: boolean;
+  phone_verified?: boolean;
   identity_verification?: IdentityVerificationDetail | null;
 }
 
