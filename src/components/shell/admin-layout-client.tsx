@@ -48,6 +48,8 @@ export function AdminLayoutClient({
       void keepSessionAlive();
     }, 25 * 60 * 1000);
 
+    void keepSessionAlive();
+
     return () => {
       window.clearInterval(interval);
     };

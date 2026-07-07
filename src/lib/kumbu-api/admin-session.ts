@@ -50,12 +50,28 @@ function decodeTokenExp(token: string): number | null {
   }
 }
 
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  const exp = decodeTokenExp(token);
+  if (exp == null) return true;
+  const nowSec = Math.floor(Date.now() / 1000);
+  return exp <= nowSec;
+}
+
 function isTokenExpiredOrExpiringSoon(token: string | null): boolean {
   if (!token) return true;
   const exp = decodeTokenExp(token);
   if (exp == null) return true;
   const nowSec = Math.floor(Date.now() / 1000);
   return exp <= nowSec + REFRESH_BUFFER_SECONDS;
+}
+
+/** Leitura segura em Server Components — nunca escreve cookies. */
+export async function readAdminAccessToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const current = cookieStore.get(ADMIN_ACCESS_COOKIE)?.value ?? null;
+  if (!current || isTokenExpired(current)) return null;
+  return current;
 }
 
 async function persistAdminTokens(accessToken: string, refreshToken: string) {
@@ -118,9 +134,9 @@ export async function refreshAdminAccessToken(): Promise<string | null> {
 
 export async function ensureAdminAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
-  const current = cookieStore.get(ADMIN_ACCESS_COOKIE)?.value ?? null;
-  if (current && !isTokenExpiredOrExpiringSoon(current)) {
-    return current;
+  const raw = cookieStore.get(ADMIN_ACCESS_COOKIE)?.value ?? null;
+  if (raw && !isTokenExpiredOrExpiringSoon(raw)) {
+    return raw;
   }
   const refreshed = await refreshAdminAccessToken();
   if (!refreshed) {
