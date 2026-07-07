@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { KumbuApiError, kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 import { resolveAdminApiPath, resolveAdminResource } from "@/lib/admin-routes";
 
@@ -73,7 +74,7 @@ async function fetchAdminListSafe<T>(
     return { data };
   } catch (error) {
     if (error instanceof KumbuApiError && error.status === 401) {
-      throw error;
+      redirect("/login?expired=1");
     }
     return { data: fallback, error: apiListErrorMessage(error) };
   }
@@ -107,7 +108,7 @@ export async function adminFetch<T>(
       { withAuth: true },
     );
   } catch (error) {
-    if (error instanceof KumbuApiError && error.status === 401) throw error;
+    if (error instanceof KumbuApiError && error.status === 401) redirect("/login?expired=1");
     return null;
   }
 }
@@ -129,7 +130,7 @@ export async function adminGet<T>(resource: string, id: string): Promise<T | nul
       { withAuth: true },
     );
   } catch (error) {
-    if (error instanceof KumbuApiError && error.status === 401) throw error;
+    if (error instanceof KumbuApiError && error.status === 401) redirect("/login?expired=1");
     return null;
   }
 }

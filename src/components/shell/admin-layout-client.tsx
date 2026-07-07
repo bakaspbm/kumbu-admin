@@ -44,6 +44,8 @@ export function AdminLayoutClient({
       return refreshInFlight;
     }
 
+    void keepSessionAlive();
+
     const interval = window.setInterval(() => {
       void keepSessionAlive();
     }, 25 * 60 * 1000);

@@ -20,7 +20,7 @@ export async function requireSuperAdmin(): Promise<AdminSession> {
 export async function requireAdmin(): Promise<AdminSession> {
   const token = await readAdminAccessToken();
   if (!token) {
-    redirect("/login");
+    redirect("/login?expired=1");
   }
 
   try {
@@ -32,9 +32,7 @@ export async function requireAdmin(): Promise<AdminSession> {
     };
   } catch (error) {
     if (error instanceof KumbuApiError) {
-      if (error.status === 401) {
-        redirect("/login");
-      }
+      if (error.status === 401) redirect("/login?expired=1");
       if (error.status === 403) redirect("/forbidden");
     }
     redirect("/login");
