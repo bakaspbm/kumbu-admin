@@ -132,6 +132,16 @@ export async function refreshAdminAccessToken(): Promise<string | null> {
   return refreshInFlight;
 }
 
+/** Leitura apenas — seguro em Server Components (sem mutar cookies). */
+export async function readAdminAccessToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const current = cookieStore.get(ADMIN_ACCESS_COOKIE)?.value ?? null;
+  if (!current || isTokenExpiredOrExpiringSoon(current)) {
+    return null;
+  }
+  return current;
+}
+
 export async function ensureAdminAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(ADMIN_ACCESS_COOKIE)?.value ?? null;
