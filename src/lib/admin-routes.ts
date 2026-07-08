@@ -13,6 +13,7 @@ const RESOURCE_ALIASES: Record<string, string> = {
   analytics: "system/analytics/snapshot",
   "analytics/rankings": "system/analytics/rankings",
   "dashboard/control": "dashboard/control",
+  holidays: "app/holiday-campaigns",
 };
 
 export function resolveAdminResource(resource: string): string {

@@ -8,7 +8,9 @@ export function JsonBlock({
   const text =
     data === null || data === undefined
       ? "—"
-      : JSON.stringify(data, null, 2);
+      : Array.isArray(data) && data.length === 0
+        ? "[]"
+        : JSON.stringify(data, null, 2);
 
   return (
     <div className="space-y-1.5">

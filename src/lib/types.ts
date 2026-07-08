@@ -101,11 +101,35 @@ export interface MarketingBlock {
   sort_order: number;
 }
 
+export interface SupportQuickAction {
+  id: string;
+  label: string;
+  answer?: string;
+  keywords?: string[];
+  escalate?: boolean;
+}
+
 export interface SupportSettings {
   id: string;
   welcome_message: string;
-  quick_actions: string[];
+  quick_actions: SupportQuickAction[];
   auto_reply_message: string;
+  enabled?: boolean;
+  offline_message?: string;
+}
+
+export interface HolidayCampaign {
+  id: string;
+  name: string;
+  message: string;
+  month_day: string;
+  scope: "national" | "international";
+  country_code?: string | null;
+  gradient_from: string;
+  gradient_to: string;
+  display_mode: "banner" | "theme" | "both";
+  active: boolean;
+  sort_order: number;
 }
 
 export interface CategorySortFilter {

@@ -101,10 +101,18 @@ export default async function SupportInboxPage({
             </thead>
             <tbody>
               {data.items.map((row) => (
-                <tr key={row.id}>
+                <tr
+                  key={row.id}
+                  className={row.overdue ? "bg-rose-50/80 [&_td]:text-rose-900" : undefined}
+                >
                   <td>
                     <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium">
                       <span>{row.user_name ?? row.user_email ?? "Visitante"}</span>
+                      {row.overdue ? (
+                        <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                          +24h sem resposta
+                        </span>
+                      ) : null}
                       {row.guest ? (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
                           Visitante

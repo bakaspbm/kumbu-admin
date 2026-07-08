@@ -198,18 +198,35 @@ export async function adminUpsert(resource: string, payload: Record<string, unkn
   const usePatch =
     resource === "marketing" ||
     resource === "filters" ||
-    resource === "payment-methods";
+    resource === "payment-methods" ||
+    resource === "holidays";
 
   if (usePatch && id) {
-    await kumbuApiFetch<void>(
-      resolveAdminApiPath(resource, id),
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: json,
-      },
-      { withAuth: true },
-    );
+    try {
+      await kumbuApiFetch<void>(
+        resolveAdminApiPath(resource, id),
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: json,
+        },
+        { withAuth: true },
+      );
+    } catch (error) {
+      if (error instanceof KumbuApiError && error.status === 404) {
+        await kumbuApiFetch<void>(
+          resolveAdminApiPath(resource),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: json,
+          },
+          { withAuth: true },
+        );
+      } else {
+        throw error;
+      }
+    }
     return;
   }
 

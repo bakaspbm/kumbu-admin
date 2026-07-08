@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SupportPage() {
 
-  const data = await adminFetch<SupportSettings>("app/support-settings");
+  const data = await adminFetch<SupportSettings>("support");
 
 
 

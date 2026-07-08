@@ -26,7 +26,11 @@ import { adminListSafe } from "@/lib/admin-data";
 
 import { PageHeader } from "@/components/ui/page-header";
 
-import { StatCard } from "@/components/ui/stat-card";
+import {
+  DashboardMetricsSection,
+  parseDashboardMetric,
+} from "@/components/dashboard/dashboard-metrics-section";
+import { parseAnalyticsPeriod } from "@/lib/analytics-period";
 
 import { OrderStatusBadge } from "@/components/ui/status-badge";
 
@@ -72,10 +76,16 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 
 
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ metric?: string; period?: string }>;
+}) {
+  const params = await searchParams;
+  const metric = parseDashboardMetric(params.metric);
+  const period = parseAnalyticsPeriod(params.period);
 
-  const [overviewRes, marketplaceRes, recentOrdersRes, ordersTimelineRes] =
-
+  const [overviewRes, marketplaceRes, recentOrdersRes, ordersTimelineRes, metricRes] =
     await Promise.all([
 
       adminListSafe<AdminOverview>("dashboard"),
@@ -90,6 +100,11 @@ export default async function DashboardPage() {
 
       adminListSafe<{ created_at: string }>("orders", { timeline_days: 30 }),
 
+      adminListSafe<{ metric: string; period: string; series: { bucket: string; total: number }[] }>(
+        "dashboard/metrics",
+        { metric, period },
+      ),
+
     ]);
 
   const apiErrors = [
@@ -102,6 +117,8 @@ export default async function DashboardPage() {
 
     ordersTimelineRes.error,
 
+    metricRes.error,
+
   ].filter(Boolean) as string[];
 
   const overviewRows = overviewRes.data;
@@ -111,6 +128,10 @@ export default async function DashboardPage() {
   const recentOrders = recentOrdersRes.data;
 
   const ordersTimelineRows = ordersTimelineRes.data;
+
+  const metricRows = metricRes.data;
+
+  const metricSeries = metricRows[0]?.series ?? [];
 
   const marketplace = marketplaceRows[0] ?? { activeListings: 0, uniqueSellers: 0 };
 
@@ -200,19 +221,13 @@ export default async function DashboardPage() {
 
       )}
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-
-        <StatCard label="Utilizadores" value={overview.users_total} hint={`+${overview.users_last_7d} nos últimos 7 dias`} icon={UsersIcon} accent="red" />
-
-        <StatCard label="Vendedores activos" value={marketplace.uniqueSellers} hint={`${marketplace.activeListings} anúncios publicados`} icon={Package} accent="blue" />
-
-        <StatCard label="Transações" value={overview.orders_total} hint={`+${overview.orders_last_7d} nos últimos 7 dias`} icon={ShoppingBag} accent="purple" />
-
-        <StatCard label="Anúncios activos" value={marketplace.activeListings} hint={`${overview.products_out_of_stock} esgotados`} icon={Package} accent="blue" />
-
-        <StatCard label="Notificações por ler" value={overview.notifications_unread} hint="Em todas as caixas de utilizador" icon={Bell} accent="amber" />
-
-      </section>
+      <DashboardMetricsSection
+        overview={overview}
+        marketplace={marketplace}
+        metric={metric}
+        period={period}
+        series={metricSeries}
+      />
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 

@@ -10,6 +10,7 @@ export type SupportConversationItem = {
   updated_at: string;
   last_message_body: string | null;
   last_message_at: string | null;
+  overdue?: boolean;
 };
 
 export type SupportMessageItem = {
