@@ -26,10 +26,8 @@ import { adminListSafe } from "@/lib/admin-data";
 
 import { PageHeader } from "@/components/ui/page-header";
 
-import {
-  DashboardMetricsSection,
-  parseDashboardMetric,
-} from "@/components/dashboard/dashboard-metrics-section";
+import { DashboardMetricsSection } from "@/components/dashboard/dashboard-metrics-section";
+import { parseDashboardMetric } from "@/lib/dashboard-metric";
 import { parseAnalyticsPeriod } from "@/lib/analytics-period";
 
 import { OrderStatusBadge } from "@/components/ui/status-badge";

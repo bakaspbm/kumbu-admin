@@ -11,14 +11,8 @@ import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/ui/stat-card";
 import { MetricSeriesChart } from "@/components/dashboard/metric-series-chart";
 import { PERIOD_LABELS, type AnalyticsPeriod } from "@/lib/analytics-period";
+import type { DashboardMetric } from "@/lib/dashboard-metric";
 import type { AdminOverview } from "@/lib/types";
-
-export type DashboardMetric =
-  | "users"
-  | "sellers"
-  | "orders"
-  | "listings"
-  | "notifications";
 
 const METRIC_LABELS: Record<DashboardMetric, string> = {
   users: "Utilizadores",
@@ -157,16 +151,4 @@ export function DashboardMetricsSection({
       </section>
     </>
   );
-}
-
-export function parseDashboardMetric(value: string | undefined): DashboardMetric {
-  if (
-    value === "sellers" ||
-    value === "orders" ||
-    value === "listings" ||
-    value === "notifications"
-  ) {
-    return value;
-  }
-  return "users";
 }
