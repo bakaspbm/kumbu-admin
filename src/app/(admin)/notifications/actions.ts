@@ -11,6 +11,7 @@ import { adminAction, adminDelete, adminList, adminPatch, adminUpsert } from "@/
 import type { ActionState } from "@/lib/action-state";
 
 import { KumbuApiError } from "@/lib/kumbu-api/server-client";
+import { kumbuApiFetch } from "@/lib/kumbu-api/server-client";
 import { formDataString, toActionState } from "@/lib/kumbu-api/errors";
 
 const UUID_RE =
@@ -204,38 +205,55 @@ export async function unhideNotificationAction(formData: FormData): Promise<void
 
 
 export async function deleteNotificationAction(formData: FormData): Promise<void> {
-
   try {
-
     await requireAdmin();
-
     const id = formDataString(formData, "id");
-
     if (!id) return;
 
-
-
     await adminDelete("notifications", id);
-
     await logAudit({
-
       action: "notification.delete",
-
       entity: "user_notifications",
-
       entityId: id,
-
     });
-
     revalidatePath("/notifications");
-
     revalidatePath("/users", "layout");
-
   } catch {
-
     /* non-blocking */
-
   }
+}
 
+export async function updateEmailNewListingsAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const raw = formDataString(formData, "enabled");
+    const enabled = raw === "true" || raw === "1";
+    await kumbuApiFetch<{ email_new_listings_enabled?: boolean }>(
+      "/admin/notifications/email-settings",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_new_listings_enabled: enabled }),
+      },
+      { withAuth: true },
+    );
+    await logAudit({
+      action: "notification.email_new_listings",
+      entity: "platform_email_settings",
+      payload: { enabled },
+    });
+    revalidatePath("/notifications");
+    return {
+      ok: true,
+      message: enabled
+        ? "Emails de novos anúncios activados."
+        : "Emails de novos anúncios desactivados.",
+    };
+  } catch (e) {
+    return toActionState(e);
+  }
 }
 
