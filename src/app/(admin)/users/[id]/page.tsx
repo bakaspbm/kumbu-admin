@@ -37,6 +37,7 @@ import type {
 } from "@/lib/types";
 import {
   DeleteUserForm,
+  HardDeleteUserForm,
   ExportUserButton,
   PasswordResetForm,
   EmailVerificationPanel,
@@ -149,6 +150,11 @@ export default async function UserDetailPage({
               <p className="truncate text-lg font-bold">
                 {user.display_name?.trim() || user.email}
               </p>
+              {user.legal_name?.trim() ? (
+                <p className="mt-0.5 truncate text-xs text-slate-500">
+                  Documento: {user.legal_name.trim()}
+                </p>
+              ) : null}
               <p className="truncate text-xs text-slate-500 font-mono">{user.id}</p>
               {adminRow && (
                 <span className="mt-1 inline-block kumbu-badge bg-rose-100 text-kumbu-red text-[10px]">
@@ -176,6 +182,16 @@ export default async function UserDetailPage({
             </div>
           </div>
           <dl className="mt-5 space-y-3 text-sm">
+            <Row
+              icon={UserCircle}
+              label="Nome público"
+              value={user.display_name?.trim() || "—"}
+            />
+            <Row
+              icon={UserCircle}
+              label="Nome completo (documento)"
+              value={user.legal_name?.trim() || "—"}
+            />
             <Row icon={Mail} label="E-mail" value={user.email ?? "—"} />
             <div className="flex flex-wrap items-center gap-2 pl-11">
               <span
@@ -342,7 +358,10 @@ export default async function UserDetailPage({
                 />
               </>
             )}
-            {isSuperAdmin && <DeleteUserForm id={user.id} />}
+            {isSuperAdmin && !user.deleted_at && <DeleteUserForm id={user.id} />}
+            {isSuperAdmin && !adminRow && (
+              <HardDeleteUserForm id={user.id} email={user.email} />
+            )}
           </div>
         </div>
 

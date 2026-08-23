@@ -15,6 +15,8 @@ export interface KumbuUser {
   id: string;
   email: string | null;
   display_name: string | null;
+  /** Nome completo do documento — privado. */
+  legal_name?: string | null;
   phone: string | null;
   photo_url: string | null;
   created_at: string;
@@ -22,6 +24,9 @@ export interface KumbuUser {
   signup_source?: ClientSource | string | null;
   signup_auth_method?: SignupAuthMethod | string | null;
   last_active_source?: ClientSource | string | null;
+  last_seen_at?: string | null;
+  online?: boolean;
+  seconds_since_last_seen?: number;
   banned_at?: string | null;
   banned_until?: string | null;
   ban_reason?: string | null;
@@ -99,6 +104,16 @@ export interface MarketingBlock {
   gradient_from: string;
   gradient_to: string;
   sort_order: number;
+  active?: boolean;
+  badge?: string | null;
+  cta_label?: string | null;
+  cta_href?: string | null;
+  image_url?: string | null;
+  category_id?: string | null;
+  search_query?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  show_brand_points?: boolean;
 }
 
 export interface SupportQuickAction {
@@ -130,6 +145,12 @@ export interface HolidayCampaign {
   display_mode: "banner" | "theme" | "both";
   active: boolean;
   sort_order: number;
+  cta_label?: string | null;
+  cta_href?: string | null;
+  category_id?: string | null;
+  search_query?: string | null;
+  starts_on?: string | null;
+  ends_on?: string | null;
 }
 
 export interface CategorySortFilter {
@@ -172,6 +193,41 @@ export interface AdminOverview {
   products_out_of_stock: number;
   categories_total: number;
   notifications_unread: number;
+}
+
+export interface OnlineUsersSummary {
+  total: number;
+  web: number;
+  app: number;
+  unknown: number;
+}
+
+export interface VisitorStatsSummary {
+  online: number;
+  today: number;
+  yesterday: number;
+  last_7_days: number;
+  window_seconds?: number;
+  period?: string;
+  from?: string | null;
+  to?: string | null;
+  /** Unique visitors in the selected period (COUNT DISTINCT). */
+  total?: number;
+  /** hour | day | month — chart bucket size */
+  granularity?: "hour" | "day" | "month" | string;
+  days?: Array<{ date: string; visitors: number }>;
+  series?: Array<{ date: string; visitors: number }>;
+}
+
+export interface OnlineUsersResponse {
+  window_seconds: number;
+  summary: OnlineUsersSummary;
+  visitors?: VisitorStatsSummary;
+  content: KumbuUser[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
 }
 
 export interface AdminUserRow {

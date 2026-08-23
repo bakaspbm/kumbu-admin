@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   resolveAdminAction,
   resolveSuperAdminAction,
@@ -39,6 +40,7 @@ export async function updateUserAction(
       entityId: id,
       payload: {
         display_name: raw.display_name,
+        legal_name: raw.legal_name,
         phone: raw.phone,
       },
     });
@@ -55,18 +57,61 @@ export async function deleteUserAction(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const auth = await resolveAdminAction();
+    const auth = await resolveSuperAdminAction();
     if ("error" in auth) return { ok: false, message: auth.error };
     const id = formDataString(formData, "id");
     if (!id) return { ok: false, message: "ID em falta." };
 
     await adminDelete("users", id);
-    await logAudit({ action: "user.delete", entity: "users", entityId: id });
+    await logAudit({ action: "user.soft_delete", entity: "users", entityId: id });
     revalidatePath("/users");
-    return { ok: true, message: "Utilizador eliminado." };
+    revalidatePath(`/users/${id}`);
+    return {
+      ok: true,
+      message: "Conta desactivada (recuperável). Pode restaurar ou apagar permanentemente.",
+    };
   } catch (e) {
     return toActionState(e);
   }
+}
+
+export async function hardDeleteUserAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const auth = await resolveSuperAdminAction();
+    if ("error" in auth) return { ok: false, message: auth.error };
+    const id = formDataString(formData, "id");
+    const confirm = formDataString(formData, "confirm");
+    if (!id) return { ok: false, message: "ID em falta." };
+    if (confirm !== "APAGAR") {
+      return {
+        ok: false,
+        message: 'Escreva APAGAR (em maiúsculas) para confirmar a eliminação permanente.',
+      };
+    }
+    if (id === auth.session.userId) {
+      return { ok: false, message: "Não pode eliminar permanentemente a sua própria conta." };
+    }
+
+    await kumbuApiFetch<void>(
+      `/admin/users/${encodeURIComponent(id)}/permanent`,
+      { method: "DELETE" },
+      { withAuth: true },
+    );
+    await logAudit({
+      action: "user.hard_delete",
+      entity: "users",
+      entityId: id,
+      payload: { permanent: true },
+    });
+    revalidatePath("/users");
+  } catch (e) {
+    return toActionState(e);
+  }
+  // Conta já não existe — sair do detalhe para evitar 404 em /users/[id].
+  redirect("/users");
 }
 
 export async function promoteAdminAction(

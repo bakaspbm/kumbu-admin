@@ -19,6 +19,7 @@ import {
 import {
   updateUserAction,
   deleteUserAction,
+  hardDeleteUserAction,
   restoreUserAction,
   banUserAction,
   unbanUserAction,
@@ -27,13 +28,14 @@ import {
   sendPasswordResetAction,
   sendEmailVerificationAction,
 } from "../actions";
+import { FeedbackBanner } from "@/components/ui/toast";
+import { ConfirmSubmit } from "@/components/ui/confirm-dialog";
 import {
   BAN_DURATION_OPTIONS,
   formatBanStatusLabel,
   isUserCurrentlyBanned,
   type UserBanFields,
 } from "@/lib/user-ban";
-import { FeedbackBanner } from "@/components/ui/toast";
 
 function Btn({
   pendingLabel,
@@ -96,6 +98,7 @@ export function UpdateUserForm({
     id: string;
     email: string | null;
     display_name: string | null;
+    legal_name?: string | null;
     phone: string | null;
     gender?: string | null;
     birth_date?: string | null;
@@ -113,7 +116,16 @@ export function UpdateUserForm({
       <input type="hidden" name="id" value={user.id} />
       <FeedbackBanner feedback={state} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Nome" name="display_name" defaultValue={user.display_name ?? ""} />
+        <Field
+          label="Nome completo (documento)"
+          name="legal_name"
+          defaultValue={user.legal_name ?? ""}
+        />
+        <Field
+          label="Nome público / da loja"
+          name="display_name"
+          defaultValue={user.display_name ?? ""}
+        />
         <Field label="Telefone" name="phone" defaultValue={user.phone ?? ""} />
         <Field
           label="E-mail (perfil público)"
@@ -237,19 +249,7 @@ export function BanUserForm({ id }: { id: string }) {
     null,
   );
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (
-          !confirm(
-            "Suspender este utilizador? Não poderá publicar, comprar nem enviar mensagens durante o período escolhido.",
-          )
-        ) {
-          e.preventDefault();
-        }
-      }}
-      className="kumbu-panel-warning space-y-3"
-    >
+    <form action={action} className="kumbu-panel-warning space-y-3">
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
       <p className="kumbu-panel-title text-sm font-semibold">Suspender utilizador</p>
@@ -272,13 +272,17 @@ export function BanUserForm({ id }: { id: string }) {
           placeholder="Ex.: fraude, spam, violação das regras…"
         />
       </label>
-      <Btn
-        icon={ShieldBan}
-        pendingLabel="A banir..."
+      <ConfirmSubmit
+        title="Suspender utilizador"
+        description="Não poderá publicar, comprar nem enviar mensagens durante o período escolhido."
+        confirmLabel="Aplicar suspensão"
+        tone="warning"
         className="kumbu-btn-danger w-full"
+        pendingLabel="A banir..."
       >
+        <ShieldBan className="h-4 w-4" />
         Aplicar suspensão
-      </Btn>
+      </ConfirmSubmit>
     </form>
   );
 }
@@ -289,15 +293,7 @@ export function UnbanUserForm({ id, user }: { id: string; user?: UserBanFields }
     null,
   );
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (!confirm("Cancelar a suspensão deste utilizador? Voltará a poder usar a plataforma.")) {
-          e.preventDefault();
-        }
-      }}
-      className="kumbu-panel-warning space-y-3 rounded-xl border p-4"
-    >
+    <form action={action} className="kumbu-panel-warning space-y-3 rounded-xl border p-4">
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
       <p className="kumbu-panel-title text-sm font-semibold">Conta suspensa</p>
@@ -313,13 +309,17 @@ export function UnbanUserForm({ id, user }: { id: string; user?: UserBanFields }
         O utilizador vê um aviso no site com opção de contactar o suporte. Use o botão abaixo para
         levantar a suspensão.
       </p>
-      <Btn
-        icon={ShieldCheck}
-        pendingLabel="A cancelar suspensão…"
+      <ConfirmSubmit
+        title="Cancelar suspensão"
+        description="O utilizador voltará a poder usar a plataforma."
+        confirmLabel="Cancelar suspensão"
+        tone="default"
         className="kumbu-btn-primary w-full"
+        pendingLabel="A cancelar suspensão…"
       >
+        <ShieldCheck className="h-4 w-4" />
         Cancelar suspensão
-      </Btn>
+      </ConfirmSubmit>
     </form>
   );
 }
@@ -344,27 +344,20 @@ export function RestoreUserForm({ id }: { id: string }) {
     null
   );
   return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        if (
-          !confirm(
-            "Restaurar esta conta? O utilizador voltará a aparecer como activo na app."
-          )
-        )
-          e.preventDefault();
-      }}
-      className="space-y-2"
-    >
+    <form action={action} className="space-y-2">
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
-      <Btn
-        icon={RotateCcw}
-        pendingLabel="A restaurar..."
+      <ConfirmSubmit
+        title="Restaurar conta"
+        description="O utilizador voltará a aparecer como activo na app."
+        confirmLabel="Restaurar"
+        tone="default"
         className="kumbu-btn-primary w-full"
+        pendingLabel="A restaurar..."
       >
+        <RotateCcw className="h-4 w-4" />
         Restaurar conta eliminada
-      </Btn>
+      </ConfirmSubmit>
     </form>
   );
 }
@@ -375,27 +368,76 @@ export function DeleteUserForm({ id }: { id: string }) {
     null
   );
   return (
+    <form action={action} className="space-y-2">
+      <input type="hidden" name="id" value={id} />
+      <FeedbackBanner feedback={state} />
+      <p className="text-xs text-slate-500">
+        Soft-delete: desactiva a conta (recuperável). Sessões são invalidadas.
+      </p>
+      <ConfirmSubmit
+        title="Desactivar conta"
+        description="O utilizador deixa de poder entrar, mas a conta pode ser restaurada depois."
+        confirmLabel="Desactivar"
+        className="kumbu-btn-danger"
+        pendingLabel="A desactivar..."
+      >
+        <Trash2 className="h-4 w-4" />
+        Desactivar conta
+      </ConfirmSubmit>
+    </form>
+  );
+}
+
+export function HardDeleteUserForm({
+  id,
+  email,
+}: {
+  id: string;
+  email: string | null;
+}) {
+  const [state, action] = useActionState<ActionState, FormData>(
+    hardDeleteUserAction,
+    null,
+  );
+  return (
     <form
       action={action}
-      onSubmit={(e) => {
-        if (
-          !confirm(
-            "Eliminar este utilizador? Esta acção remove a conta de Auth e dados associados."
-          )
-        )
-          e.preventDefault();
-      }}
-      className="space-y-2"
+      className="space-y-3 rounded-xl border border-rose-200 bg-rose-50/60 p-4"
     >
       <input type="hidden" name="id" value={id} />
       <FeedbackBanner feedback={state} />
-      <Btn
-        icon={Trash2}
-        pendingLabel="A eliminar..."
-        className="kumbu-btn-danger"
+      <p className="text-sm font-semibold text-rose-900">Apagar permanentemente</p>
+      <p className="text-xs text-rose-800/90">
+        Remove a conta da base de dados (anúncios desactivados, conversas e dados
+        associados limpos). Irreversível.
+        {email ? (
+          <>
+            {" "}
+            Conta: <span className="font-mono">{email}</span>
+          </>
+        ) : null}
+      </p>
+      <ConfirmSubmit
+        title="Apagar conta completa"
+        description={
+          <>
+            Esta acção é permanente e não pode ser desfeita.
+            {email ? (
+              <>
+                {" "}
+                Conta: <span className="font-mono">{email}</span>
+              </>
+            ) : null}
+          </>
+        }
+        confirmLabel="Apagar definitivamente"
+        requireText="APAGAR"
+        className="kumbu-btn-danger w-full"
+        pendingLabel="A apagar..."
       >
-        Eliminar conta
-      </Btn>
+        <Trash2 className="h-4 w-4" />
+        Apagar conta completa
+      </ConfirmSubmit>
     </form>
   );
 }
@@ -420,22 +462,20 @@ export function PromoteAdminForm({
 
   if (isAdmin) {
     return (
-      <form
-        action={demote}
-        onSubmit={(e) => {
-          if (!confirm("Revogar permissões de administrador?")) e.preventDefault();
-        }}
-        className="space-y-2"
-      >
+      <form action={demote} className="space-y-2">
         <input type="hidden" name="id" value={id} />
         <FeedbackBanner feedback={demoteState} />
-        <Btn
-          icon={ShieldOff}
-          pendingLabel="A revogar..."
+        <ConfirmSubmit
+          title="Revogar administrador"
+          description="Esta conta deixa de ter permissões de administração."
+          confirmLabel="Revogar"
+          tone="warning"
           className="kumbu-btn-ghost"
+          pendingLabel="A revogar..."
         >
+          <ShieldOff className="h-4 w-4" />
           Revogar admin
-        </Btn>
+        </ConfirmSubmit>
       </form>
     );
   }
