@@ -10,6 +10,7 @@ export function Sidebar({
   role,
   pendingReportsCount = 0,
   waitingSupportCount = 0,
+  unreadMailboxCount = 0,
   pendingIdentityCount = 0,
   pendingApplicationsCount = 0,
   pendingRentalsCount = 0,
@@ -18,6 +19,7 @@ export function Sidebar({
   role?: AdminRole;
   pendingReportsCount?: number;
   waitingSupportCount?: number;
+  unreadMailboxCount?: number;
   pendingIdentityCount?: number;
   pendingApplicationsCount?: number;
   pendingRentalsCount?: number;
@@ -42,6 +44,7 @@ export function Sidebar({
         role={role}
         pendingReportsCount={pendingReportsCount}
         waitingSupportCount={waitingSupportCount}
+        unreadMailboxCount={unreadMailboxCount}
         pendingIdentityCount={pendingIdentityCount}
         pendingApplicationsCount={pendingApplicationsCount}
         pendingRentalsCount={pendingRentalsCount}

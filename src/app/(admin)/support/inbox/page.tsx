@@ -48,8 +48,8 @@ export default async function SupportInboxPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Fila de suporte"
-        subtitle={`${data.total} conversa(s) — pedidos escalados desde o chat da app.`}
+        title="Fila de chat"
+        subtitle={`${data.total} conversa(s) — pedidos escalados desde o chat da app (não emails).`}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link

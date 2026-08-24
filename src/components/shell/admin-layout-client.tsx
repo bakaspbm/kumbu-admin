@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import type { AdminQueueCounts } from "@/lib/admin-queue-stats";
 import type { AdminSession } from "@/lib/auth";
+import { bootstrapAdminBrowserAccessToken } from "@/lib/kumbu-api/admin-browser-session";
+import { touchAdminPresence } from "@/lib/kumbu-api/presence";
 import { AdminShellSkeleton } from "@/components/shell/admin-shell-skeleton";
 const AdminShell = dynamic(
   () =>
@@ -45,15 +47,28 @@ export function AdminLayoutClient({
     }
 
     void keepSessionAlive();
+    void bootstrapAdminBrowserAccessToken().then(() => {
+      void touchAdminPresence().catch(() => {});
+    });
 
     const interval = window.setInterval(() => {
       void keepSessionAlive();
     }, 25 * 60 * 1000);
 
-    void keepSessionAlive();
+    const presenceInterval = window.setInterval(() => {
+      void touchAdminPresence().catch(() => {});
+    }, 120_000);
+
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      void touchAdminPresence().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       window.clearInterval(interval);
+      window.clearInterval(presenceInterval);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
@@ -62,6 +77,7 @@ export function AdminLayoutClient({
       session={session}
       pendingReportsCount={queueCounts.pendingReports}
       waitingSupportCount={queueCounts.waitingSupport}
+      unreadMailboxCount={queueCounts.unreadMailbox}
       pendingIdentityCount={queueCounts.pendingIdentity}
       pendingApplicationsCount={queueCounts.pendingApplications}
       pendingRentalsCount={queueCounts.pendingRentals}

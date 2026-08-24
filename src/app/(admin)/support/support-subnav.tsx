@@ -1,13 +1,21 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/support/inbox", label: "Fila de chat" },
+  { href: "/support/mailbox", label: "Caixa de email" },
   { href: "/support", label: "FAQ e bot" },
 ];
 
-export function SupportSubNav({ active }: { active: string }) {
+export function SupportSubNav({
+  active,
+  className,
+}: {
+  active: string;
+  className?: string;
+}) {
   return (
-    <nav className="mb-6 flex flex-wrap gap-2">
+    <nav className={cn("mb-3 flex flex-wrap gap-2", className)}>
       {links.map((link) => (
         <Link
           key={link.href}

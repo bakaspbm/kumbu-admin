@@ -26,9 +26,12 @@ import {
   Star,
   Coins,
   Inbox,
+  Mail,
   Briefcase,
   CalendarClock,
   BadgeCheck,
+  Activity,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +49,7 @@ type NavItem = {
 const MARKETPLACE_NAV: NavItem[] = [
   { href: "/reports", label: "Denúncias", icon: Flag },
   { href: "/users", label: "Utilizadores C2C", icon: Users },
+  { href: "/users/online", label: "Presença no site", icon: Activity },
   { href: "/identity", label: "Identidade (KYC)", icon: BadgeCheck },
   { href: "/products", label: "Anúncios à venda", icon: Package },
   { href: "/jobs", label: "Vagas de emprego", icon: Briefcase },
@@ -64,13 +68,15 @@ const PLATFORM_NAV: NavItem[] = [
   { href: "/monetization", label: "Monetização", icon: Coins },
   { href: "/analytics", label: "Estatísticas", icon: BarChart3 },
   { href: "/categories", label: "Categorias", icon: Tags },
-  { href: "/marketing", label: "Banners da app", icon: Megaphone },
-  { href: "/support/inbox", label: "Fila de suporte", icon: Inbox },
+  { href: "/marketing", label: "Telão do site", icon: Megaphone },
+  { href: "/support/inbox", label: "Fila de chat", icon: Inbox },
+  { href: "/support/mailbox", label: "Caixa de email", icon: Mail },
   { href: "/support", label: "FAQ suporte", icon: LifeBuoy },
   { href: "/payment-methods", label: "Pagamentos", icon: CreditCard },
   { href: "/filters", label: "Filtros", icon: Filter },
   { href: "/notifications", label: "Notificações", icon: Bell },
   { href: "/admins", label: "Administradores", icon: ShieldCheck },
+  { href: "/security", label: "Segurança", icon: KeyRound },
   { href: "/audit", label: "Auditoria", icon: ListChecks },
   { href: "/settings", label: "Definições", icon: Settings },
 ];
@@ -82,6 +88,14 @@ function NavBadge({ count }: { count: number }) {
       {count > 99 ? "99+" : count}
     </span>
   );
+}
+
+function isNavActive(pathname: string, href: string): boolean {
+  if (pathname === href) return true;
+  // FAQ exacto — não activar em /support/inbox ou /support/mailbox
+  if (href === "/support") return false;
+  if (href === "/dashboard") return false;
+  return pathname.startsWith(`${href}/`);
 }
 
 function NavSection({
@@ -100,9 +114,7 @@ function NavSection({
       </p>
       <ul className="space-y-0.5">
         {items.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const active = isNavActive(pathname, item.href);
           const Icon = item.icon;
           return (
             <li key={item.href}>
@@ -136,6 +148,7 @@ export function SidebarNav({
   role,
   pendingReportsCount = 0,
   waitingSupportCount = 0,
+  unreadMailboxCount = 0,
   pendingIdentityCount = 0,
   pendingApplicationsCount = 0,
   pendingRentalsCount = 0,
@@ -144,6 +157,7 @@ export function SidebarNav({
   role?: AdminRole;
   pendingReportsCount?: number;
   waitingSupportCount?: number;
+  unreadMailboxCount?: number;
   pendingIdentityCount?: number;
   pendingApplicationsCount?: number;
   pendingRentalsCount?: number;
@@ -159,6 +173,7 @@ export function SidebarNav({
   });
   const platformNav = PLATFORM_NAV.map((item) => {
     if (item.href === "/support/inbox") return { ...item, badgeCount: waitingSupportCount };
+    if (item.href === "/support/mailbox") return { ...item, badgeCount: unreadMailboxCount };
     if (item.href === "/monetization") return { ...item, badgeCount: monetizationGateReview };
     return item;
   });
