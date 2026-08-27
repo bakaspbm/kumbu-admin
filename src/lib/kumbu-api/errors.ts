@@ -34,6 +34,10 @@ export function isKumbuApiError(error: unknown): error is KumbuApiError {
 }
 
 export function toActionState(error: unknown): ActionState {
+  // redirect() / notFound() do Next lançam erros especiais — nunca converter em toast.
+  if (isNextNavigationError(error)) {
+    throw error;
+  }
   if (isKumbuApiError(error)) {
     return {
       ok: false,
@@ -48,6 +52,17 @@ export function toActionState(error: unknown): ActionState {
     return { ok: false, message: sanitizeMessage(error.message) };
   }
   return { ok: false, message: "Ocorreu um erro. Tente novamente." };
+}
+
+function isNextNavigationError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = "digest" in error ? String((error as { digest?: unknown }).digest ?? "") : "";
+  if (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND")) return true;
+  if (error instanceof Error) {
+    const msg = error.message;
+    return msg === "NEXT_REDIRECT" || msg === "NEXT_NOT_FOUND";
+  }
+  return false;
 }
 
 export function toLoginError(error: unknown): { error: string; fields?: Record<string, string> } {

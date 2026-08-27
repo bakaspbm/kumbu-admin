@@ -31,6 +31,16 @@ function parseErrorBody(text: string): ApiErrorBody | null {
   }
 }
 
+function throwForStatus(status: number, path: string, text: string): never {
+  const body = parseErrorBody(text);
+  const message =
+    body?.message ||
+    (status === 403
+      ? `Acesso bloqueado (403) em ${path}. Se persistir, desactiva Bot Fight Mode no Cloudflare.`
+      : `Kumbu API request failed (${status}) for ${path}.`);
+  throw new KumbuApiError(message, status, body?.code, body?.fields);
+}
+
 /** Fetch base — sem next/headers; seguro para importar em qualquer bundle. */
 export async function kumbuApiFetchBase<T>(
   path: string,
@@ -58,11 +68,7 @@ export async function kumbuApiFetchBase<T>(
   const text = await response.text();
 
   if (!response.ok) {
-    const body = parseErrorBody(text);
-    const message =
-      body?.message ||
-      `Kumbu API request failed (${response.status}) for ${path}.`;
-    throw new KumbuApiError(message, response.status, body?.code, body?.fields);
+    throwForStatus(response.status, path, text);
   }
 
   if (response.status === 204 || response.status === 205 || !text.trim()) {
@@ -71,3 +77,5 @@ export async function kumbuApiFetchBase<T>(
 
   return parseJsonBody(text) as T;
 }
+
+export { parseJsonBody, parseErrorBody, throwForStatus };

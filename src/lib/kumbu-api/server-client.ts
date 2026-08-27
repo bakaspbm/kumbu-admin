@@ -2,7 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { KumbuApiError } from "@/lib/kumbu-api/api-error";
-import { kumbuApiFetchBase, type KumbuFetchOptions } from "@/lib/kumbu-api/fetch";
+import { kumbuServerFetch, type KumbuFetchOptions } from "@/lib/kumbu-api/fetch-server";
 import { readAdminAccessToken } from "@/lib/kumbu-api/admin-session";
 
 export { KumbuApiError } from "@/lib/kumbu-api/api-error";
@@ -44,7 +44,7 @@ export async function kumbuApiFetch<T>(
   options: Omit<KumbuFetchOptions, "accessToken"> = {},
 ): Promise<T> {
   if (!options.withAuth) {
-    return kumbuApiFetchBase<T>(path, init, options);
+    return kumbuServerFetch<T>(path, init, options);
   }
 
   let accessToken = await readAdminAccessToken();
@@ -57,13 +57,13 @@ export async function kumbuApiFetch<T>(
   }
 
   try {
-    return await kumbuApiFetchBase<T>(path, init, { ...options, accessToken });
+    return await kumbuServerFetch<T>(path, init, { ...options, accessToken });
   } catch (error) {
     if (error instanceof KumbuApiError && error.status === 401) {
       if (await tryRefreshAdminSession()) {
         const refreshed = await readAdminAccessToken();
         if (refreshed) {
-          return kumbuApiFetchBase<T>(path, init, {
+          return kumbuServerFetch<T>(path, init, {
             ...options,
             accessToken: refreshed,
           });

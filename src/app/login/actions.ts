@@ -2,7 +2,12 @@
 
 import { sanitizeInternalPath } from "@/lib/auth/safe-redirect";
 import { redirect } from "next/navigation";
-import { loginWithKumbuApi, logoutFromKumbuApi, clearKumbuApiAuthCookies } from "@/lib/kumbu-api/auth";
+import {
+  loginWithKumbuApi,
+  logoutFromKumbuApi,
+  clearKumbuApiAuthCookies,
+  verifyMfaWithKumbuApi,
+} from "@/lib/kumbu-api/auth";
 import { toLoginError } from "@/lib/kumbu-api/errors";
 import type { BootstrapState, LoginState } from "@/lib/action-state";
 
@@ -16,20 +21,45 @@ export async function loginAction(
     const next = String(formData.get("next") ?? "/dashboard");
 
     if (!email || !password) {
-      return { error: "Indica o e-mail e a palavra-passe." };
+      return { error: "Indique o e-mail e a palavra-passe." };
     }
 
     const response = await loginWithKumbuApi({ email, password });
+    if (response.mfaRequired && response.mfaToken) {
+      return { mfaRequired: true, mfaToken: response.mfaToken };
+    }
     if (!response.admin) {
       await clearKumbuApiAuthCookies();
       return {
         error:
-          "Esta conta não tem permissões de administrador. Contacta um super admin.",
+          "Esta conta não tem permissões de administrador. Contacte um super admin.",
       };
     }
 
     const redirectTo = sanitizeInternalPath(next, "/dashboard");
     return { success: true, redirectTo };
+  } catch (e) {
+    return toLoginError(e);
+  }
+}
+
+export async function verifyMfaAction(
+  _prev: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  try {
+    const mfaToken = String(formData.get("mfaToken") ?? "").trim();
+    const code = String(formData.get("code") ?? "").trim();
+    const next = String(formData.get("next") ?? "/dashboard");
+    if (!mfaToken || !code) {
+      return { error: "Indique o código 2FA da app autenticadora." };
+    }
+    const response = await verifyMfaWithKumbuApi({ mfaToken, code });
+    if (!response.admin) {
+      await clearKumbuApiAuthCookies();
+      return { error: "Conta sem permissões de administrador." };
+    }
+    return { success: true, redirectTo: sanitizeInternalPath(next, "/dashboard") };
   } catch (e) {
     return toLoginError(e);
   }
