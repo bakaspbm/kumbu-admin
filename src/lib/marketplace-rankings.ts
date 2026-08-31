@@ -14,6 +14,10 @@ export type RankedProduct = {
 export type RankedSeller = {
   seller_id?: string;
   user_id?: string;
+  seller_name?: string;
+  seller_email?: string;
+  buyer_name?: string;
+  buyer_email?: string;
   listing_count?: number;
   orders_count?: number;
 };
