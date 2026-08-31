@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { resolveUserRouteId } from "@/lib/user-id";
 import {
   ArrowLeft,
   Mail,
@@ -57,6 +58,10 @@ export default async function UserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const routeId = resolveUserRouteId(id);
+  if (routeId === "online") redirect("/users/online");
+  if (routeId === "invalid") notFound();
+
   const adminSession = await getOptionalAdmin();
   const isSuperAdmin = adminSession?.role === "super_admin";
   const [user, purchases, sales, listings, notifications, adminRow, purchaseStats, salesStats] =

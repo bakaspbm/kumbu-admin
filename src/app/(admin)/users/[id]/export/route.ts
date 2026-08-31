@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, logAudit } from "@/lib/auth";
 import { buildUserExport } from "@/lib/user-export";
+import { resolveUserRouteId } from "@/lib/user-id";
 
 export async function GET(
   _request: Request,
@@ -8,6 +9,13 @@ export async function GET(
 ) {
   await requireAdmin();
   const { id } = await context.params;
+  const routeId = resolveUserRouteId(id);
+  if (routeId === "online") {
+    return NextResponse.redirect(new URL("/users/online", _request.url));
+  }
+  if (routeId === "invalid") {
+    return NextResponse.json({ error: "ID de utilizador inválido." }, { status: 404 });
+  }
 
   const data = await buildUserExport(id);
   if (!data) {
